@@ -527,6 +527,23 @@ table.cf td.mini2{min-width:120px}table.cf td:last-child{min-width:200px}
 .roomsbtn .rcl{gap:6px;max-width:42%}.roomsbtn .rcl .pill{font-size:13px;padding:2px 12px}
 .roomsbtn .go{font-size:17px;background:var(--teal);color:#fff;border-radius:12px;padding:8px 16px}
 @media (max-width:600px){.roomsbtn{padding:18px;min-height:110px;gap:12px}.roomsbtn .ri{width:60px;height:60px;font-size:30px}.roomsbtn b{font-size:22px}.roomsbtn .go{font-size:14px;padding:6px 10px}}
+/* post-test + alerts */
+table.post input.pin{width:62px;text-align:center;padding:4px 6px}
+table.post input.pin::placeholder{color:#c3ccd5}
+.hstats{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}.hs.k6{--kc:#9b4fb3}
+.alerts{margin-top:14px;background:#fff;border:1px solid #f0d9a8;border-inline-start:6px solid #e3a51a;border-radius:16px;padding:12px 16px;box-shadow:var(--sh1)}
+.alerts.ok{border-color:var(--line);border-inline-start-color:#23925a}
+.ach2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ach2 b{font-family:var(--fh);font-size:17px;color:var(--ink)}.ach2 small{color:var(--muted)}
+.ach2 .bell{font-size:20px;display:inline-block;transform-origin:top center}.alerts:not(.ok) .bell{animation:bell 2.4s ease-in-out infinite}
+@keyframes bell{0%,70%,100%{transform:rotate(0)}75%{transform:rotate(14deg)}80%{transform:rotate(-12deg)}85%{transform:rotate(8deg)}90%{transform:rotate(-5deg)}}
+.acount{background:#e3a51a;color:#fff;border-radius:999px;padding:0 9px;font-weight:800;font-size:12.5px}
+.agrp{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line2)}
+.ah{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px}.ah b{color:var(--ink)}.ah small{color:var(--muted);font-size:12px}
+.alist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.achip{border:1px solid var(--line2);background:var(--soft);border-radius:999px;padding:3px 11px;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer}
+.achip small{color:var(--muted);font-weight:600}.achip:hover{background:var(--teal-l);border-color:var(--teal)}
+.aok{margin-top:6px;color:#1d7a4a;font-weight:700;font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.bell{animation:none!important}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -786,6 +803,10 @@ const TCLS = () => { const l = meT() ? myCls().slice() : CLASS_LIST.slice(); ret
 const STU = () => { const l = meT() ? ALL().filter(s => myCls().includes(s.cls)) : ALL(); return inRoom() ? l.filter(s => s.cls === UI.room) : l; };
 const VCLS = () => inRoom() ? [UI.room] : TCLS();
 const scopeTag = () => inRoom() ? `<span class="scope">🏫 ${esc(clsName(UI.room))}</span>` : meT() ? `<span class="scope">👨‍🏫 ${esc(meT().name)} · ${VCLS().map(c => esc(c)).join('، ') || 'لا صفوف'}</span>` : '';
+const hasPost = s => !!(s.post && KEYS.some(k => s.post[k] != null && s.post[k] !== ''));
+const postTot = s => hasPost(s) ? Math.round(KEYS.reduce((a, k) => a + (+s.post[k] || 0), 0) * 10) / 10 : null;
+const postPct = (s, k) => hasPost(s) && s.post[k] != null && s.post[k] !== '' ? Math.min(100, s.post[k] / MAX[k] * 100) : null;
+const dlt = v => v == null ? '—' : `<b dir="ltr" style="unicode-bidi:isolate;color:${v > 0 ? '#1d7a4a' : v < 0 ? '#c94242' : '#5d6a78'}">${v > 0 ? '+' : ''}${fmt(v, 1)}</b>`;
 const weak = s => KEYS.filter(k => (pctOf(s, k) ?? 0) < 80).sort((a, b) => (pctOf(s, a) ?? 0) - (pctOf(s, b) ?? 0));
 function entriesOf(sid) {
   const ind = ((S.logs[sid] || {}).e || []).map(x => Object.assign({kind: 'ind'}, x));
@@ -836,7 +857,7 @@ function filterBar(withStudent) {
 
 /* ---------- render shell ---------- */
 const MENU = [['home', '🏠 الصفحة الرئيسية'], ['guide', '📘 دليل الاستخدام'], ['set', '⚙️ الإعدادات']];
-const TABS = [['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
+const TABS = [['post', '📝 الاختبار البعدي'], ['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
 function render() {
   const v = $('#view'); applyLook();
   $('#tabs').innerHTML = `<div class="mh">القائمة</div>` + MENU.map(([k, n]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}"><span class="ic">${n.split(' ')[0]}</span>${n.split(' ').slice(1).join(' ')}</button>`).join('') + `<div class="mf">جميع الحقوق محفوظة © أ. خالد الحمري</div>`;
@@ -846,7 +867,7 @@ function render() {
   renderMeta();
   if (!ready) { v.innerHTML = '<div class="loading">⏳ جارٍ تحميل البيانات…</div>'; return; }
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
-  const f = {guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
+  const f = {post: vPost, guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
   setTimeout(countUp, 0);
   v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + f(); renderSum(); if (tab === 'print') fillFrame();
 }
@@ -867,7 +888,7 @@ function renderSum() {
 }
 
 /* ---------- home: classes ---------- */
-const ROOM_T = [['ind', '📋', 'الخطط الفردية', 'متابعة خطة كل طالب: الأهداف والأنشطة والملاحظات'], ['grp', '👥', 'خطط الفئات', 'متابعة جماعية لطلاب الفئة نفسها'], ['print', '🖨️', 'طباعة الأنشطة', 'أنشطة كل طالب بحسب فترته ومستواه'], ['att', '🗓️', 'الحضور', 'حصة البرنامج والفسحة'], ['cls', '🏫', 'المتابعة الصفية', 'مؤشرات الأداء داخل الفصل'], ['rep', '📄', 'التقارير', 'تقارير الطلاب وتقرير الصف (PDF)'], ['studs', '🧑‍🎓', 'الطلاب', 'إضافة الطلاب وتعديل بياناتهم']];
+const ROOM_T = [['ind', '📋', 'الخطط الفردية', 'متابعة خطة كل طالب: الأهداف والأنشطة والملاحظات'], ['grp', '👥', 'خطط الفئات', 'متابعة جماعية لطلاب الفئة نفسها'], ['print', '🖨️', 'طباعة الأنشطة', 'أنشطة كل طالب بحسب فترته ومستواه'], ['att', '🗓️', 'الحضور', 'حصة البرنامج والفسحة'], ['cls', '🏫', 'المتابعة الصفية', 'مؤشرات الأداء داخل الفصل'], ['rep', '📄', 'التقارير', 'تقارير الطلاب وتقرير الصف (PDF)'], ['post', '📝', 'الاختبار البعدي', 'إدخال درجات البعدي ومقارنتها بالقبلي'], ['studs', '🧑‍🎓', 'الطلاب', 'إضافة الطلاب وتعديل بياناتهم']];
 function roomStats(c) { const l = ALL().filter(s => s.cls === c); const g = l.reduce((a, s) => a + [...givenSet(s.id)].filter(k => !k.includes('أ') && !k.includes('ب')).length, 0);
   const at = l.map(s => attStats(s.id).pct).filter(x => x != null); return {l, n: l.length, prog: l.length ? g / (l.length * 60) * 100 : 0, att: at.length ? at.reduce((a, b) => a + b, 0) / at.length : null, cats: [1, 2, 3, 4].map(k => l.filter(s => catOf(s.total) === k).length)}; }
 const LOGO = `<svg class="logo" viewBox="0 0 220 220" role="img" aria-label="شعار برنامج بالعربية أرتقي"><defs><linearGradient id="lgA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="var(--navy)"/><stop offset="1" stop-color="var(--teal)"/></linearGradient><linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#f0a92e"/></linearGradient></defs>
@@ -884,7 +905,8 @@ function progStats() { const st = ALL(); let acts = 0; st.forEach(s => acts += g
   const fol = Object.values(S.logs).reduce((a, l) => a + (l.e || []).length, 0) + Object.keys(S.glogs).length + Object.keys(S.cf).length;
   let wk = null; if (S.cfg.start) { const w = Math.floor((new Date(today()) - new Date(S.cfg.start)) / 864e5 / 7); wk = Math.max(3, Math.min(14, 3 + w)); }
   const gb = st.reduce((a, s) => a + [...givenSet(s.id)].filter(k => k.startsWith(bookOf(s) + ':')).length, 0);
-  return {n: st.length, cats: [1, 2, 3, 4].map(k => st.filter(s => catOf(s.total) === k).length), acts, ses, brk, fol, wk, prog: st.length ? gb / (st.length * 60) * 100 : 0}; }
+  const pd = st.filter(hasPost); const post = pd.length, gain = post ? pd.reduce((a, s) => a + postTot(s) - s.total, 0) / post : 0, up = pd.filter(s => catOf(postTot(s)) < catOf(s.total)).length;
+  return {post, gain, up, n: st.length, cats: [1, 2, 3, 4].map(k => st.filter(s => catOf(s.total) === k).length), acts, ses, brk, fol, wk, prog: st.length ? gb / (st.length * 60) * 100 : 0}; }
 function roomCard(c) { const card = c => { const r = roomStats(c), t = teacherOfCls(c);
     return `<button class="room" data-room="${esc(c)}" type="button"><span class="rt"><b>${esc(clsName(c))}</b><span class="rn">${r.n} طالبًا</span></span>
     <span class="rcats">${r.cats.map((n, i) => n ? `<span class="cat cat${i + 1}">${CATS[i + 1]} ${n}</span>` : '').join('') || '<span class="mini2">لا طلاب</span>'}</span>
@@ -900,12 +922,14 @@ function vHome() {
   const wkTxt = P.wk ? `الأسبوع ${P.wk} من ١٤ · ${PERN[curPeriod()].split('–')[0].trim()}` : 'حدّد «بداية الخطة» من الإعدادات';
   return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
   <button class="roomsbtn" data-t="classes" type="button"><span class="ri">🏫</span><span class="rt2"><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف · ${cls.reduce((a, c) => a + ALL().filter(s => s.cls === c).length, 0)} طالبًا</small></span><span class="rcl">${cls.slice(0, 6).map(c => `<span class="pill">${esc(c)}</span>`).join('')}${cls.length > 6 ? '<span class="pill">…</span>' : ''}</span><span class="go">دخول ←</span></button>
+  ${alertsCard()}
   <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
   <div class="hstats">
    <div class="hs k1"><span class="hi">🧑‍🎓</span><b data-count="${P.n}">${P.n}</b><span>طلاب البرنامج</span><small>${P.cats.map((n, i) => `${CATS[i + 1]} ${n}`).join(' · ')}</small></div>
    <div class="hs k2"><span class="hi">🧩</span><b data-count="${P.acts}">${P.acts}</b><span>الأنشطة المقدَّمة</span><small>إنجاز الخطط ${fmt(P.prog, 0)}%</small></div>
    <div class="hs k3"><span class="hi">📘</span><b data-count="${P.ses}">${P.ses}</b><span>الحصص المقدَّمة</span><small>وفسحات الدعم: ${P.brk}</small></div>
    <div class="hs k4"><span class="hi">🗂️</span><b data-count="${P.fol}">${P.fol}</b><span>المتابعات المسجّلة</span><small>فردية وفئات وصفية</small></div>
+   <div class="hs k6"><span class="hi">🎯</span><b dir="ltr" style="unicode-bidi:isolate;text-align:right">${P.post ? (P.gain > 0 ? '+' : '') + fmt(P.gain, 1) : '—'}</b><span>متوسط التحسّن (البعدي)</span><small>${P.post ? `أُجري لـ ${P.post} · انتقل ${P.up} إلى فئة أعلى` : 'لم تُدخل درجات البعدي بعد'}</small></div>
    <div class="hs k5 wide"><span class="hi">🗓️</span><div class="wk"><span>${wkTxt}</span><span class="prog"><i style="width:${P.wk ? (P.wk - 2) / 12 * 100 : 0}%"></i></span></div></div>
   </div>
   <div class="gl"><button class="gtile" data-t="dash" type="button">📊 <b>لوحة المتابعة التفصيلية</b></button></div>`;
@@ -1074,6 +1098,7 @@ function reportStudent(s) {
   <div class="hero">${ring(gb / (acts.length || 60) * 100, 100)}<div class="t"><span style="font-size:15px">الأنشطة المنجزة: <b>${gb} من ${acts.length}</b> (${BOOKN[book]})</span><span>متابعات الخطة: <b>${ents.length}</b> · أهداف متحقّقة كليًّا: <b>${Object.values(gd).filter(x => x === 'full').length}</b></span><span>انتظام حصة البرنامج: <b>${attPct(as.pct)}</b> · انتظام الفسحة: <b>${attPct(ab.pct)}</b></span></div></div>
   <div class="two"><div><h2>نتائج الاختبار القبلي</h2>${bars(KEYS.map(k => ({n: COMP[k], p: pctOf(s, k)})))}</div><div><h2>انتظام الحضور</h2>${bars([{n: 'حصة البرنامج', p: as.pct, c: '#0f7a83', lab: as.n ? attPct(as.pct) : '—'}, {n: 'الفسحة', p: ab.pct, c: '#3d6fd6', lab: ab.n ? attPct(ab.pct) : '—'}])}
   <table><tr><th></th><th>حاضر</th><th>غائب</th><th>بعذر</th><th>متأخر</th></tr><tr><td class="l">الحصة</td><td>${as.P}</td><td>${as.A}</td><td>${as.E}</td><td>${as.L}</td></tr><tr><td class="l">الفسحة</td><td>${ab.P}</td><td>${ab.A}</td><td>${ab.E}</td><td>${ab.L}</td></tr></table></div></div>
+  ${hasPost(s) ? `<h2>مقارنة الاختبارين القبلي والبعدي</h2><table><tr><th class="l">الكفاية</th><th>القبلي</th><th>البعدي</th><th>التغيّر</th><th>المستوى قبل ← بعد</th></tr>${KEYS.map(k => { const a = pctOf(s, k), b = postPct(s, k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(a, 0)}%</td><td>${b == null ? '—' : fmt(b, 0) + '%'}</td><td>${dlt(a == null || b == null ? null : b - a)}</td><td>${STARS[startLv(a)]} ← ${b == null ? '—' : STARS[startLv(b)]}</td></tr>`; }).join('')}<tr><td class="l"><b>المجموع</b></td><td><b>${fmt(s.total)}%</b></td><td><b>${fmt(postTot(s))}%</b></td><td>${dlt(postTot(s) - s.total)}</td><td>${CATS[catOf(s.total)]} ← ${CATS[catOf(postTot(s))]}</td></tr></table>` : ''}
   <h2>الخطة الفردية: الأنشطة المنجزة بحسب الكفاية ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>القبلي</th><th>النسبة</th><th>مستوى البدء</th><th>المنجز</th><th class="l">أرقام الأنشطة</th></tr>${compRows}</table>
   <h2>الأهداف</h2><div>${goals || '<span class="pill">لم تُسجَّل أهداف بعد</span>'}</div>
   ${lastCf && cfRow ? `<h2>المتابعة الصفية (آخر متابعة ${esc(lastCf.date)} – ${esc(tName(lastCf.tid))})</h2><table><tr>${IND.map(x => `<th>${x}</th>`).join('')}<th>التقدّم</th></tr><tr>${IND.map((_, i) => `<td>${(cfRow.ind || [])[i] || '—'}</td>`).join('')}<td>${PROG[cfRow.prog] || '—'}</td></tr></table>${(cfRow.nsel || []).length || cfRow.note ? `<div class="mini2">ملاحظات معلم الفصل: ${esc([...(cfRow.nsel || []), cfRow.note || ''].filter(Boolean).join('؛ '))}</div>` : ''}` : ''}
@@ -1084,9 +1109,9 @@ function reportStudent(s) {
 }
 function reportGroup(title, list) {
   const rows = list.map((s, i) => { const g = [...givenSet(s.id)].filter(x => x.startsWith(bookOf(s) + ':')).length, cf = cfOf(s.id)[0], ca = cf ? cfAvg(cf.rows[s.id]) : null;
-    return `<tr><td>${i + 1}</td><td class="l">${esc(s.name)}</td><td>${esc(s.cls)}</td><td><span class="cat cat${catOf(s.total)}">${CATS[catOf(s.total)]}</span></td><td>${fmt(s.total)}%</td><td>${KEYS.map(k => STARS[startLv(pctOf(s, k))]).join(' ')}</td><td>${g} / 60</td><td>${entriesOf(s.id).length}</td><td>${attPct(attStats(s.id, 'ses').pct)}</td><td>${attPct(attStats(s.id, 'brk').pct)}</td><td>${ca == null ? '—' : fmt(ca) + ' / ٤'}</td></tr>`; }).join('');
+    return `<tr><td>${i + 1}</td><td class="l">${esc(s.name)}</td><td>${esc(s.cls)}</td><td><span class="cat cat${catOf(s.total)}">${CATS[catOf(s.total)]}</span></td><td>${fmt(s.total)}%</td><td>${hasPost(s) ? fmt(postTot(s)) + '%' : '—'}</td><td>${hasPost(s) ? dlt(postTot(s) - s.total) : '—'}</td><td>${KEYS.map(k => STARS[startLv(pctOf(s, k))]).join(' ')}</td><td>${g} / 60</td><td>${entriesOf(s.id).length}</td><td>${attPct(attStats(s.id, 'ses').pct)}</td><td>${attPct(attStats(s.id, 'brk').pct)}</td><td>${ca == null ? '—' : fmt(ca) + ' / ٤'}</td></tr>`; }).join('');
   return `<style>${RP_CSS}</style><div class="rp"><div class="hd"><img src="${LETTERHEAD}" alt=""></div><div class="tb"><h1>${esc(title)}</h1><small>برنامج «بالعربية أرتقي» · ${esc(S.cfg.school)} · ${esc(S.cfg.year)} · ${today()}</small></div>
-  <h2>متابعة الطلاب (${list.length})</h2><table><tr><th>م</th><th class="l">الطالب</th><th>الصف</th><th>الفئة</th><th>القبلي</th><th>مستوى البدء L S W R T</th><th>الأنشطة</th><th>المتابعات</th><th>حضور الحصة</th><th>حضور الفسحة</th><th>المتابعة الصفية</th></tr>${rows || '<tr><td colspan="11">—</td></tr>'}</table>
+  <h2>متابعة الطلاب (${list.length})</h2><table><tr><th>م</th><th class="l">الطالب</th><th>الصف</th><th>الفئة</th><th>القبلي</th><th>البعدي</th><th>التحسّن</th><th>مستوى البدء L S W R T</th><th>الأنشطة</th><th>المتابعات</th><th>حضور الحصة</th><th>حضور الفسحة</th><th>المتابعة الصفية</th></tr>${rows || '<tr><td colspan="13">—</td></tr>'}</table>
   <div class="sig"><span>معلم البرنامج: <i></i></span><span>منسق البرنامج: ${esc(S.cfg.coord)}</span><span>مدير المدرسة: ${esc(S.cfg.principal)}</span></div></div>`;
 }
 function vRep() {
@@ -1103,6 +1128,8 @@ function vRep() {
       body = reportStudent(s); }
   } else if (m === 'cat') { ctl = `<div class="tools"><label>الفئة: ${catSelect('rCat', UI.rCat)}</label></div>`; body = reportGroup('تقرير متابعة ' + CATN[UI.rCat], STU().filter(s => String(catOf(s.total)) === String(UI.rCat))); }
   else { if (!UI.rCls || !VCLS().includes(UI.rCls)) UI.rCls = VCLS()[0] || ''; ctl = `<div class="tools"><label>الصف: ${clsSelect('rCls', UI.rCls)}</label><span class="mini2">المعلم: ${esc(teacherOfCls(UI.rCls).map(t => t.name).join('، ') || '—')}</span></div>`; body = reportGroup('تقرير متابعة طلاب ' + clsName(UI.rCls) + ' – ' + (teacherOfCls(UI.rCls).map(t => t.name).join('، ') || ''), STU().filter(s => s.cls === UI.rCls)); }
+  if (m === 'stu' && UI.repPar && S.students[UI.rSid]) body = reportParent(S.students[UI.rSid]);
+  if (m === 'stu') ctl = `<div class="tools"><span class="seg"><button type="button" data-rpar="0" aria-pressed="${!UI.repPar}">📄 تقرير المتابعة</button><button type="button" data-rpar="1" aria-pressed="${!!UI.repPar}">👪 تقرير وليّ الأمر (عربي / English)</button></span></div>` + ctl;
   return `<div class="tools"><span class="seg">${[['stu', '🧑‍🎓 تقرير طالب'], ['cat', '📚 تقرير فئة'], ['cls', '🏫 تقرير صف / معلم']].map(([k, v]) => `<button type="button" data-rep="${k}" aria-pressed="${k === m}">${v}</button>`).join('')}</span>
   <span class="sp reprow"><button class="btn o" id="rPdf" type="button">📄 تنزيل التقرير PDF</button>${m !== 'stu' ? '<button class="btn" id="rPdfAll" type="button">📚 تقارير الطلاب الفردية (PDF واحد)</button>' : ''}<button class="btn w" id="rPrint" type="button">🖨️ طباعة</button></span></div>${ctl}<div id="printArea"><div class="rpbox">${body || '<div class="empty">اختر طالبًا.</div>'}</div></div>`;
 }
@@ -1266,6 +1293,71 @@ function vSet() {
   return `<div class="tools setnav"><span class="seg">${SET_T.map(([k, n]) => `<button type="button" data-stab="${k}" aria-pressed="${k === UI.sTab}">${n}</button>`).join('')}</span></div>` + P[UI.sTab]();
 }
 
+/* ---------- post-test ---------- */
+function vPost() {
+  const list = STU();
+  const rows = list.map(s => { const p = s.post || {}, pt = postTot(s), d = pt == null ? null : pt - s.total;
+    return `<tr data-sid="${s.id}"><td class="nm">${esc(s.name)}</td><td>${esc(s.cls)}</td><td>${catChip(catOf(s.total))}</td><td>${fmt(s.total)}</td>
+    ${KEYS.map(k => `<td><input type="number" class="pin" data-pk="${k}" min="0" max="${MAX[k]}" step="0.5" value="${p[k] ?? ''}" placeholder="${fmt(scOf(s)[k])}" title="القبلي: ${fmt(scOf(s)[k])} من ${MAX[k]}"></td>`).join('')}
+    <td><b>${pt == null ? '—' : fmt(pt)}</b></td><td>${dlt(d)}</td><td>${pt == null ? '—' : catChip(catOf(pt))}</td></tr>`; }).join('');
+  const done = list.filter(hasPost), up = done.filter(s => catOf(postTot(s)) < catOf(s.total)).length, avg = done.length ? done.reduce((a, s) => a + postTot(s) - s.total, 0) / done.length : null;
+  return `<div class="kpis" style="margin-top:12px"><div class="kpi k1"><span>أُدخلت درجاتهم</span><b>${done.length} / ${list.length}</b></div><div class="kpi k2"><span>متوسط التحسّن</span><b dir="ltr" style="unicode-bidi:isolate">${avg == null ? '—' : (avg > 0 ? '+' : '') + fmt(avg, 1)}</b></div><div class="kpi k3"><span>انتقلوا إلى فئة أعلى</span><b>${up}</b></div></div>
+  <div class="card" style="margin-top:12px"><div class="ch"><h3>📝 درجات الاختبار البعدي</h3><small>الرقم الباهت في الخانة هو درجة القبلي للمقارنة · الدرجات من: ${KEYS.map(k => SH[k] + ' ' + MAX[k]).join(' · ')}</small></div><div class="cb tw">
+  <table class="post"><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>الفئة</th><th>القبلي /١٠٠</th>${KEYS.map(k => `<th>${SH[k]}<br><small>/${MAX[k]}</small></th>`).join('')}<th>البعدي</th><th>التحسّن</th><th>الفئة بعد</th></tr></thead><tbody>${rows || '<tr><td colspan="12" class="empty">لا يوجد طلاب.</td></tr>'}</tbody></table>
+  <div class="reprow" style="margin-top:10px"><button class="btn" id="postSave" type="button">💾 حفظ درجات البعدي</button><span class="mini2">تبقى فئة الطالب وخطته مبنيّتين على القبلي؛ ويظهر البعدي في التقارير والإحصائيات للمقارنة.</span></div></div></div>`;
+}
+
+/* ---------- parent report (bilingual) ---------- */
+const COMP_EN = {L: 'Listening', S: 'Silent reading', W: 'Writing', R: 'Reading aloud', T: 'Speaking'};
+const CAT_EN = {1: 'Excellent', 2: 'Proficient', 3: 'Passed – needs reinforcement', 4: 'Not yet passed – remedial support'};
+const LV_EN = {1: 'Basic', 2: 'Intermediate', 3: 'Advanced'};
+const TIPS = {L: ['استمعوا معًا إلى قصص أو أناشيد عربية قصيرة، واطلبوا منه أن يعيد ما سمعه.', 'Listen together to short Arabic stories or songs, and ask him to retell what he heard.'],
+  S: ['شجّعوه على قراءة قصة عربية قصيرة ١٠ دقائق يوميًّا، ثم اسألوه عنها.', 'Encourage him to read a short Arabic story for 10 minutes a day, then ask him about it.'],
+  W: ['اطلبوا منه أن يكتب ٣ جمل قصيرة بالعربية كل يوم عن يومه.', 'Ask him to write 3 short Arabic sentences every day about his day.'],
+  R: ['استمعوا إليه وهو يقرأ صفحة من كتابه المدرسي بصوت عالٍ كل مساء.', 'Listen to him read a page of his school book aloud every evening.'],
+  T: ['تحدّثوا معه بالعربية في مواقف يومية بسيطة، وامدحوا محاولاته.', 'Speak with him in Arabic in simple daily situations and praise his attempts.']};
+const clsEn = c => { const [g, n] = String(c).split('/'); const m = {'4ب': 4, '5ب': 5, '6ب': 6, '1ع': 7, '2ع': 8, '3ع': 9}[g]; return m ? `Grade ${m}${n ? ' / ' + n : ''}` : c; };
+function reportParent(s) {
+  const c = catOf(s.total), book = bookOf(s), gb = [...givenSet(s.id)].filter(x => x.startsWith(book + ':')).length, as = attStats(s.id, 'ses'), ab = attStats(s.id, 'brk'), rn = S.rn[s.id] || {}, P = hasPost(s);
+  const strong = KEYS.filter(k => (P ? postPct(s, k) : pctOf(s, k)) >= 80), need = (P ? KEYS.filter(k => (postPct(s, k) ?? 0) < 80).sort((a, b) => (postPct(s, a) ?? 0) - (postPct(s, b) ?? 0)) : weak(s)).slice(0, 2);
+  const recs = [...new Set([...(rn.rec || []), ...(rn.sel || []).filter(t => inList('rrec', t))])].concat(rn.rx ? [rn.rx] : []);
+  const row = k => { const a = pctOf(s, k), b = postPct(s, k); return `<tr><td class="l"><b>${COMP[k]}</b><br><small>${COMP_EN[k]}</small></td><td>${STARS[startLv(a)]}<br><small>${DN[startLv(a)]} · ${LV_EN[startLv(a)]}</small></td><td>${fmt(a, 0)}%</td>${P ? `<td>${fmt(b, 0)}%</td><td>${dlt(b == null || a == null ? null : b - a)}</td>` : ''}</tr>`; };
+  return `<style>${RP_CSS}.rp .bi small{display:block;color:#5d6a78;font-size:11.5px;direction:ltr;text-align:left}.rp .tips li{margin-bottom:6px}.rp .tips small{display:block;direction:ltr;text-align:left;color:#5d6a78}.rp .en{direction:ltr;text-align:left;color:#5d6a78;font-size:12px}</style><div class="rp"><div class="hd"><img src="${LETTERHEAD}" alt=""></div>
+  <div class="tb"><h1>تقرير وليّ الأمر – برنامج «بالعربية أرتقي»</h1><small>Parent Report – "Rising with Arabic" Program · ${esc(S.cfg.year)}</small></div>
+  <div class="info bi"><span>اسم الطالب / Student: <b>${esc(s.name)}</b></span><span>الصف / Class: <b>${esc(clsName(s.cls))}</b><small>${clsEn(s.cls)}</small></span><span>الفئة / Group: <b>${CATN[c]}</b><small>${CAT_EN[c]}</small></span><span>التاريخ / Date: <b>${today()}</b></span></div>
+  <div class="two"><div><h2>الحضور / Attendance</h2><table><tr><th></th><th>النسبة / Rate</th></tr><tr><td class="l">حصة البرنامج<br><small>Program sessions</small></td><td><b>${attPct(as.pct)}</b></td></tr><tr><td class="l">فسحات الدعم<br><small>Support breaks</small></td><td><b>${attPct(ab.pct)}</b></td></tr></table></div>
+  <div><h2>الإنجاز / Progress</h2><table><tr><td class="l">الأنشطة المنجزة<br><small>Activities completed</small></td><td><b>${gb} / 60</b></td></tr><tr><td class="l">الاختبار القبلي<br><small>Pre-test score</small></td><td><b>${fmt(s.total)}%</b></td></tr>${P ? `<tr><td class="l">الاختبار البعدي<br><small>Post-test score</small></td><td><b>${fmt(postTot(s))}%</b> ${dlt(postTot(s) - s.total)}</td></tr>` : ''}</table></div></div>
+  <h2>المهارات / Skills</h2><table><tr><th class="l">المهارة / Skill</th><th>المستوى / Level</th><th>القبلي / Pre</th>${P ? '<th>البعدي / Post</th><th>التغيّر / Change</th>' : ''}</tr>${KEYS.map(row).join('')}</table>
+  <div class="two"><div><h2>نقاط القوة / Strengths</h2><div class="note rec">${strong.length ? '<ul>' + strong.map(k => `<li>${COMP[k]} <span class="en">– ${COMP_EN[k]}</span></li>`).join('') + '</ul>' : 'يتقدّم في جميع المهارات خطوةً خطوة.<div class="en">Making steady progress in all skills.</div>'}</div></div>
+  <div><h2>يحتاج إلى دعم / Needs support</h2><div class="note">${need.length ? '<ul>' + need.map(k => `<li>${COMP[k]} <span class="en">– ${COMP_EN[k]}</span></li>`).join('') + '</ul>' : 'لا توجد مهارة تحتاج إلى دعم خاص.<div class="en">No skill needs special support.</div>'}</div></div></div>
+  <h2>كيف تساعدون ابنكم في البيت / How you can help at home</h2><ul class="tips">${[...(need.length ? need : ['S', 'T']).map(k => TIPS[k]), ['احرصوا على انتظام حضوره في حصص البرنامج.', 'Please make sure he attends the program sessions regularly.']].map(([a, e]) => `<li>${a}<small>${e}</small></li>`).join('')}</ul>
+  ${recs.length ? `<h2>توصيات المعلم / Teacher's recommendations</h2><div class="note rec"><ul>${recs.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+  <div class="sig"><span>المعلم المتابع / Teacher: ${esc(tName(rn.tid || (teacherOfCls(s.cls)[0] || {}).id))}</span><span>منسق البرنامج / Coordinator: ${esc(S.cfg.coord)}</span><span>توقيع وليّ الأمر / Parent's signature: <i></i></span></div></div>`;
+}
+
+/* ---------- alerts ---------- */
+function alertsOf() {
+  const st = meT() ? ALL().filter(s => myCls().includes(s.cls)) : ALL(); const T = today();
+  const started = (S.cfg.start && T >= S.cfg.start) || Object.keys(S.logs).length > 0 || Object.keys(S.att).length > 0;
+  const ses = Object.values(S.att).filter(d => d.type === 'ses').sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const absent = st.filter(s => { const m = ses.filter(d => d.marks && d.marks[s.id]).slice(0, 2).map(d => d.marks[s.id]); return m.length === 2 && m.every(x => x === 'A'); });
+  const ago = d => (new Date(T) - new Date(d)) / 864e5;
+  const nofol = started ? st.filter(s => { const e = entriesOf(s.id).map(x => x.date).filter(Boolean).sort().pop(); return !e || ago(e) > 14; }) : [];
+  const cls = [...new Set(st.map(s => s.cls))].sort((a, b) => (ORD.indexOf(a) + 1 || 99) - (ORD.indexOf(b) + 1 || 99));
+  const nocf = started ? cls.filter(c => { const d = Object.values(S.cf).filter(x => x.cls === c).map(x => x.date).sort().pop(); return !d || ago(d) > 21; }) : [];
+  return {absent, nofol, nocf, started};
+}
+function alertsCard() {
+  const A = alertsOf(), n = A.absent.length + A.nofol.length + A.nocf.length;
+  const stuBtns = l => l.slice(0, 8).map(s => `<button class="achip" data-open="${s.id}" data-room2="1" type="button">${esc(s.name.split(' ').slice(0, 3).join(' '))} <small>${esc(s.cls)}</small></button>`).join('') + (l.length > 8 ? `<span class="mini2">+${l.length - 8}</span>` : '');
+  const grp = (ic, t, d, body) => `<div class="agrp"><div class="ah"><span>${ic}</span><b>${t}</b><small>${d}</small></div><div class="alist">${body}</div></div>`;
+  return `<div class="alerts${n ? '' : ' ok'}"><div class="ach2"><span class="bell">🔔</span><b>تنبيهات</b>${n ? `<span class="acount">${n}</span>` : ''}<small>${meT() ? 'لصفوف ' + esc(meT().name) : 'لجميع الصفوف'}</small></div>
+  ${n ? (A.absent.length ? grp('🚫', `غياب حصتين متتاليتين (${A.absent.length})`, 'آخر حصتين في البرنامج', stuBtns(A.absent)) : '')
+    + (A.nofol.length ? grp('⏳', `بلا متابعة منذ أسبوعين (${A.nofol.length})`, 'لم تُسجَّل لهم متابعة خطة فردية أو فئة', stuBtns(A.nofol)) : '')
+    + (A.nocf.length ? grp('🏫', `صفوف بلا متابعة صفية (${A.nocf.length})`, 'آخر ٣ أسابيع', A.nocf.map(c => `<button class="achip" data-room="${esc(c)}" type="button">${esc(clsName(c))}</button>`).join('')) : '')
+  : `<div class="aok">✓ لا توجد تنبيهات${A.started ? '' : ' — تبدأ التنبيهات بعد بدء التسجيل أو تحديد «بداية الخطة» في الإعدادات'}</div>`}</div>`;
+}
+
 /* ---------- page appearance ---------- */
 const SET_T = [['look', '🎨 إعدادات الصفحة'], ['acc', '🔑 كلمة المرور والنسخ'], ['gh', '🔗 الربط مع GitHub'], ['tch', '👨‍🏫 المعلمون والصفوف'], ['lists', '📋 الأهداف والقوائم'], ['gen', '🏫 بيانات عامة']];
 const THEMES = {teal: ['فيروزي', '#0f7a83'], blue: ['أزرق', '#2f5fb3'], green: ['أخضر', '#23875a'], purple: ['بنفسجي', '#6b4fb3'], maroon: ['عنابي', '#9b2c3f'], orange: ['برتقالي', '#c06a1d'], slate: ['رمادي', '#475569']};
@@ -1307,6 +1399,9 @@ const GUIDE = [
   ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.']],
   ['🏫', 'المتابعة الصفية', ['اختر التاريخ وفترة المتابعة، ثم قيّم كل طالب في المؤشرات (١–٤) وحدّد الدعم المقدَّم والتقدّم وملاحظات معلم الفصل.', 'في الأسفل: ملاحظات عامة، ثم التوصيات، ثم إجراءات معلم البرنامج، واضغط «حفظ المتابعة الصفية».']],
   ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.']],
+  ['📝', 'الاختبار البعدي', ['من داخل الصف اضغط خانة «الاختبار البعدي»، وأدخل درجات كل طالب في الكفايات الخمس (الرقم الباهت في الخانة هو درجته في القبلي)، ثم اضغط «حفظ درجات البعدي».', 'يظهر التحسّن تلقائيًّا في تقرير الطالب وتقرير الصف والفئة وتقرير وليّ الأمر وإحصائيات الصفحة الرئيسية، مع عدد من انتقلوا إلى فئة أعلى. تبقى خطة الطالب مبنية على القبلي.']],
+  ['👪', 'تقرير وليّ الأمر', ['في «التقارير» ← «تقرير طالب» اضغط «تقرير وليّ الأمر (عربي / English)»، فيظهر تقرير مختصر باللغتين: الحضور، والأنشطة المنجزة، ومستوى المهارات، ونقاط القوة وما يحتاج إلى دعم، ونصائح للبيت، وتوصيات المعلم.', 'اضغط «تنزيل التقرير PDF» أو «طباعة» لإرساله إلى وليّ الأمر.']],
+  ['🔔', 'التنبيهات', ['في الصفحة الرئيسية مربع «تنبيهات» يُظهر: الطلاب الذين غابوا آخر حصتين، والطلاب الذين لم تُسجَّل لهم متابعة منذ أسبوعين، والصفوف التي لم تُسجَّل لها متابعة صفية منذ ثلاثة أسابيع.', 'اضغط اسم الطالب لفتح خطته مباشرة، أو اسم الصف للدخول إليه. عند اختيار اسم المعلم تظهر تنبيهات صفوفه فقط.']],
   ['🧑‍🎓', 'الطلاب', ['أضف طالبًا بكتابة اسمه وصفه ودرجاته في الاختبار القبلي؛ تُحسب فئته تلقائيًّا. يمكن تعديل بيانات الطالب أو حذفه.']],
   ['⚙️', 'الإعدادات', ['🎨 إعدادات الصفحة: اللون الرئيسي، خلفية الصفحة، حجم الخط، شكل الحواف، المسافات، إظهار الترويسة.', '🔑 كلمة المرور والنسخ الاحتياطي: تغيير كلمة المرور وتنزيل نسخة احتياطية أو استعادتها.', '🔗 الربط مع GitHub: لحفظ البيانات ومشاركتها بين المعلمين.', '👨‍🏫 المعلمون والصفوف، 📋 الأهداف والقوائم المنسدلة، 🏫 البيانات العامة.']],
   ['⭐', 'معاني الرموز', ['مستوى البدء في كل كفاية: ★ أساسي (أقل من ٦٠٪) · ★★ متوسط (٦٠–٧٩٪) · ★★★ متقدم (٨٠٪ فأكثر).', 'الفئات: الأولى متميز (٩٠٪ فأكثر) · الثانية متقن (٨٠–٨٩٪) · الثالثة مجتاز يحتاج تعزيزًا (٦٠–٧٩٪) · الرابعة غير مجتاز (أقل من ٦٠٪).', 'فترات الخطة: الأولى الأسابيع ٣–٥ · الثانية ٦–٨ · الثالثة ٩–١١ · الرابعة ١٢–١٤.']],
@@ -1335,6 +1430,7 @@ document.addEventListener('click', async ev => {
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'classes'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.msall != null) { b.closest('.msel').querySelectorAll('.mlist input').forEach(i => i.checked = b.dataset.msall === '1'); updMsel(b.closest('.msel')); return; }
+  if (b.dataset.rpar != null) { UI.repPar = b.dataset.rpar === '1'; render(); return; }
   if (b.dataset.stab) { UI.sTab = b.dataset.stab; render(); return; }
   if (b.dataset.look) { const L = curLook(); const k = b.dataset.look; L[k] = ['fs', 'rad', 'hdr'].includes(k) ? +b.dataset.v : b.dataset.v; if (k === 'theme') L.c = ''; UI.lookDraft = L; applyLook(L); render(); return; }
   if (b.id === 'lookSave') { const L = curLook(); S.cfg.look = L; UI.lookDraft = null; try { localStorage.setItem(LKK, JSON.stringify(L)); } catch (e) {} await saveCfg(); applyLook(); toast('✓ حُفظ التصميم'); render(); return; }
@@ -1349,7 +1445,7 @@ document.addEventListener('click', async ev => {
   if (b.dataset.pcat) { if (UI.pCat !== b.dataset.pcat) { UI.pStu = []; UI.pPick = new Map(); UI.pAct = new Set(); } UI.pCat = b.dataset.pcat; UI.pSel = null; UI.pMan = []; UI.pBook = b.dataset.pcat; render(); return; }
   if (b.dataset.cfcls) { UI.cfCls = b.dataset.cfcls; render(); return; }
   if (b.dataset.attday) { UI.attDate = b.dataset.attday; render(); return; }
-  if (b.dataset.open) { UI.sid = b.dataset.open; UI.fCat = ''; UI.fCls = ''; tab = 'ind'; render(); return; }
+  if (b.dataset.open) { UI.sid = b.dataset.open; UI.fCat = ''; UI.fCls = ''; const st0 = S.students[UI.sid]; if (st0 && UI.room && UI.room !== st0.cls) UI.room = st0.cls; if (st0 && !UI.room && b.dataset.room2) UI.room = st0.cls; tab = 'ind'; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.edit) { UI.editSid = b.dataset.edit; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.cfopen) { const x = S.cf[b.dataset.cfopen]; if (x) { UI.cfCls = x.cls; UI.cfDate = x.date; UI.cfPer = String(x.per); UI.cfT = x.tid || UI.cfT; render(); } return; }
   if (b.dataset.mark) { const id = UI.att + '_' + UI.attDate, d = JSON.parse(JSON.stringify(S.att[id] || {type: UI.att, date: UI.attDate, marks: {}})); const order = ['', 'P', 'A', 'E', 'L']; const c = d.marks[b.dataset.mark] || ''; const n = order[(order.indexOf(c) + 1) % order.length]; if (n) d.marks[b.dataset.mark] = n; else delete d.marks[b.dataset.mark]; await put('att', id, d); render(); return; }
@@ -1377,13 +1473,17 @@ document.addEventListener('click', async ev => {
     case 'attAll': { const id = UI.att + '_' + UI.attDate, d = JSON.parse(JSON.stringify(S.att[id] || {type: UI.att, date: UI.attDate, marks: {}})); STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls) ).forEach(s => { if (!d.marks[s.id]) d.marks[s.id] = 'P'; }); await put('att', id, d); render(); break; }
     case 'rnSave': { const sid = UI.rSid; await put('rn', sid, {sel: mselVal('rnSel'), x: $('#rnX').value.trim(), rec: mselVal('rnRec'), rx: $('#rnRX').value.trim(), tid: $('#rnT').value, ts: Date.now()}); toast('✓ حُفظت الملاحظات والتوصيات'); render(); break; }
     case 'rPrint': document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } catch (e) { toast('الطباعة غير متاحة هنا – استخدم التنزيل'); } setTimeout(() => document.body.classList.remove('printing'), 400); }, 50); break;
-    case 'rPdf': { const nm = UI.rep === 'stu' ? 'تقرير_' + ((S.students[UI.rSid] || {}).name || 'طالب') : UI.rep === 'cat' ? 'تقرير_' + CATN[UI.rCat].split('–')[0].trim() : 'تقرير_الصف_' + UI.rCls.replace('/', '-');
+    case 'rPdf': { const nm = UI.rep === 'stu' ? (UI.repPar ? 'تقرير_ولي_الأمر_' : 'تقرير_') + ((S.students[UI.rSid] || {}).name || 'طالب') : UI.rep === 'cat' ? 'تقرير_' + CATN[UI.rCat].split('–')[0].trim() : 'تقرير_الصف_' + UI.rCls.replace('/', '-');
       const bt = b; bt.disabled = true; await makePdf([$('#printArea .rpbox').innerHTML], nm); bt.disabled = false; break; }
     case 'rPdfAll': { const list = UI.rep === 'cat' ? STU().filter(s => String(catOf(s.total)) === String(UI.rCat)) : STU().filter(s => s.cls === UI.rCls); if (!list.length) return toast('لا يوجد طلاب');
       const nm = 'تقارير_الطلاب_' + (UI.rep === 'cat' ? CATN[UI.rCat].split('–')[0].trim() : 'الصف_' + UI.rCls.replace('/', '-'));
       const bt = b; bt.disabled = true; await makePdf(list.map(reportStudent), nm); bt.disabled = false; break; }
     case 'rDl': { const h = $('#printArea .rpbox').innerHTML; const nm = UI.rep === 'stu' ? 'تقرير_' + ((S.students[UI.rSid] || {}).name || 'طالب') : UI.rep === 'cat' ? 'تقرير_الفئة_' + UI.rCat : 'تقرير_الصف_' + UI.rCls.replace('/', '-');
       await saveFile(nm.replace(/\s+/g, '_') + '.html', `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(nm)}</title><style>body{margin:0;background:#fff}@page{size:A4;margin:8mm}</style></head><body>${h}</body></html>`, 'text/html'); break; }
+    case 'postSave': { let n = 0; for (const tr of $$('table.post tbody tr[data-sid]')) { const id = tr.dataset.sid, s0 = S.students[id]; if (!s0) continue; const post = {}; let any = false;
+        tr.querySelectorAll('input[data-pk]').forEach(i => { const k = i.dataset.pk; if (i.value !== '') { post[k] = Math.max(0, Math.min(MAX[k], +i.value)); any = true; } });
+        const old = JSON.stringify(s0.post || {}), nw = JSON.stringify(any ? post : {}); if (old === nw) continue; await put('students', id, Object.assign({}, s0, {post: any ? post : null})); n++; }
+      toast(n ? `✓ حُفظت درجات ${n} طالبًا` : 'لا تغييرات'); render(); break; }
     case 'sSave': { const name = $('#sName').value.trim(); if (!name) return toast('اكتب اسم الطالب'); const sc = {}; let tot = 0; KEYS.forEach(k => { const v = $('#sc' + k).value; sc[k] = v === '' ? 0 : Math.min(MAX[k], +v); tot += sc[k]; });
       const cls = $('#sCls').value, id = UI.editSid || ('s' + uid()); await put('students', id, Object.assign({}, S.students[id] || {}, {id, name, cls, halqa: halqaOf(cls), reg: $('#sReg').value.trim(), sc, total: Math.round(tot * 10) / 10})); UI.editSid = ''; toast('✓ حُفظ الطالب'); render(); break; }
     case 'bkGo': await restoreBackup(); break;
