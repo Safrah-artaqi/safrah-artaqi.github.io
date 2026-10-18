@@ -512,6 +512,21 @@ table.cf td.mini2{min-width:120px}table.cf td:last-child{min-width:200px}
 .hs.wide{grid-column:1/-1;display:flex;align-items:center;gap:12px}.hs.wide .hi{position:static}
 .hs .wk{flex:1;display:grid;gap:5px;font-weight:700;color:var(--ink);font-size:13.5px}
 @media (max-width:760px){.hero{flex-direction:column;text-align:center;padding:16px}.hlogo{width:120px;height:120px}.hstats{grid-template-columns:1fr 1fr}}
+.roomsbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:14px 18px;background:#fff;border:1px solid var(--line);border-inline-start:6px solid var(--teal);border-radius:16px;box-shadow:var(--sh1);cursor:pointer;font:inherit;color:var(--ink);text-align:start;transition:transform .12s,box-shadow .12s,border-color .12s}
+.roomsbtn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(16,24,40,.12);border-color:var(--teal)}
+.roomsbtn .ri{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;background:var(--teal);font-size:22px}
+.roomsbtn .rt2{display:grid}.roomsbtn b{font-family:var(--fh);font-size:19px;color:var(--teal-d)}.roomsbtn small{color:var(--muted);font-weight:600}
+.roomsbtn .rcl{display:flex;flex-wrap:wrap;gap:4px;margin-inline-start:auto;justify-content:flex-end}
+.roomsbtn .go{color:var(--teal);font-family:var(--fh);font-weight:800;white-space:nowrap}
+@media (max-width:600px){.roomsbtn .rcl{display:none}.roomsbtn .go{margin-inline-start:auto}}
+/* bigger classes box */
+.roomsbtn{padding:26px 28px;gap:20px;border-inline-start-width:8px;border-radius:20px;min-height:150px;background:linear-gradient(135deg,#fff 0%,var(--teal-l) 100%)}
+.roomsbtn .ri{width:84px;height:84px;font-size:42px;border-radius:20px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.roomsbtn b{font-size:28px}
+.roomsbtn small{font-size:14px}
+.roomsbtn .rcl{gap:6px;max-width:42%}.roomsbtn .rcl .pill{font-size:13px;padding:2px 12px}
+.roomsbtn .go{font-size:17px;background:var(--teal);color:#fff;border-radius:12px;padding:8px 16px}
+@media (max-width:600px){.roomsbtn{padding:18px;min-height:110px;gap:12px}.roomsbtn .ri{width:60px;height:60px;font-size:30px}.roomsbtn b{font-size:22px}.roomsbtn .go{font-size:14px;padding:6px 10px}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -763,7 +778,7 @@ const tName = id => { const t = (S.cfg.teachers || []).find(t => t.id === id); r
 const teacherOfCls = c => (S.cfg.teachers || []).filter(t => (t.cls || []).includes(c));
 const myCls = () => { const t = (S.cfg.teachers || []).find(t => t.id === me); return t ? t.cls || [] : []; };
 const meT = () => (S.cfg.teachers || []).find(t => t.id === me);
-const GLOBAL_T = ['home', 'dash', 'set', 'guide'];
+const GLOBAL_T = ['home', 'classes', 'dash', 'set', 'guide'];
 const CATSV = () => { if (!inRoom()) return [1, 2, 3, 4]; const c = [1, 2, 3, 4].filter(k => STU().some(s => catOf(s.total) === k)); return c.length ? c : [1, 2, 3, 4]; };
 const inRoom = () => UI.room && !GLOBAL_T.includes(tab);
 const ORD = ['4ب/1', '4ب/2', '5ب/1', '6ب/1', '1ع/1', '1ع/2', '2ع/1', '2ع/2', '3ع/1', '3ع/2'];
@@ -821,17 +836,17 @@ function filterBar(withStudent) {
 
 /* ---------- render shell ---------- */
 const MENU = [['home', '🏠 الصفحة الرئيسية'], ['guide', '📘 دليل الاستخدام'], ['set', '⚙️ الإعدادات']];
-const TABS = [['home', '🏠 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
+const TABS = [['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
 function render() {
   const v = $('#view'); applyLook();
   $('#tabs').innerHTML = `<div class="mh">القائمة</div>` + MENU.map(([k, n]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}"><span class="ic">${n.split(' ')[0]}</span>${n.split(' ').slice(1).join(' ')}</button>`).join('') + `<div class="mf">جميع الحقوق محفوظة © أ. خالد الحمري</div>`;
-  const cur = TABS.find(x => x[0] === tab); const rb = UI.room && tab !== 'home' ? `<button class="crumb" data-t="room" type="button">🏫 ${esc(clsName(UI.room))}</button>` : '';
-  $('#curT').innerHTML = (tab !== 'home' ? `<button class="crumb home" data-t="home" type="button" title="كل الصفوف">🏠</button><span class="sepc">›</span>` : '') + (GLOBAL_T.includes(tab) ? '' : rb + (rb && cur ? '<span class="sepc">›</span>' : '')) + (cur ? `<span class="ic">${cur[1].split(' ')[0]}</span><b>${cur[1].split(' ').slice(1).join(' ')}</b>` : '');
+  const cur = TABS.find(x => x[0] === tab); const inR = UI.room && !GLOBAL_T.includes(tab); const rb = inR ? `<button class="crumb" data-t="classes" type="button">🏫 الصفوف</button><span class="sepc">›</span>` + (tab === 'room' ? '' : `<button class="crumb" data-t="room" type="button">${esc(clsName(UI.room))}</button>`) : '';
+  $('#curT').innerHTML = (tab !== 'home' ? `<button class="crumb home" data-t="home" type="button" title="كل الصفوف">🏠</button><span class="sepc">›</span>` : '') + (inR ? rb + (cur ? '<span class="sepc">›</span>' : '') : '') + (cur ? `<span class="ic">${cur[1].split(' ')[0]}</span><b>${cur[1].split(' ').slice(1).join(' ')}</b>` : (tab === 'room' ? `<span class="ic">🏫</span><b>${esc(clsName(UI.room))}</b>` : ''));
   $('#navbar').hidden = !(ready && unlocked); menu(false);
   renderMeta();
   if (!ready) { v.innerHTML = '<div class="loading">⏳ جارٍ تحميل البيانات…</div>'; return; }
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
-  const f = {guide: vGuide, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
+  const f = {guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
   setTimeout(countUp, 0);
   v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + f(); renderSum(); if (tab === 'print') fillFrame();
 }
@@ -870,18 +885,21 @@ function progStats() { const st = ALL(); let acts = 0; st.forEach(s => acts += g
   let wk = null; if (S.cfg.start) { const w = Math.floor((new Date(today()) - new Date(S.cfg.start)) / 864e5 / 7); wk = Math.max(3, Math.min(14, 3 + w)); }
   const gb = st.reduce((a, s) => a + [...givenSet(s.id)].filter(k => k.startsWith(bookOf(s) + ':')).length, 0);
   return {n: st.length, cats: [1, 2, 3, 4].map(k => st.filter(s => catOf(s.total) === k).length), acts, ses, brk, fol, wk, prog: st.length ? gb / (st.length * 60) * 100 : 0}; }
-function vHome() {
-  const cls = TCLS(), P = progStats(); const open = UI.roomsOpen ?? !!meT();
-  const card = c => { const r = roomStats(c), t = teacherOfCls(c);
+function roomCard(c) { const card = c => { const r = roomStats(c), t = teacherOfCls(c);
     return `<button class="room" data-room="${esc(c)}" type="button"><span class="rt"><b>${esc(clsName(c))}</b><span class="rn">${r.n} طالبًا</span></span>
     <span class="rcats">${r.cats.map((n, i) => n ? `<span class="cat cat${i + 1}">${CATS[i + 1]} ${n}</span>` : '').join('') || '<span class="mini2">لا طلاب</span>'}</span>
     <span class="rbar"><span>إنجاز الأنشطة <b>${fmt(r.prog, 0)}%</b></span><span class="prog"><i style="width:${Math.min(100, r.prog)}%"></i></span></span>
     <span class="rbar"><span>انتظام الحضور <b>${attPct(r.att)}</b></span><span class="prog"><i style="width:${r.att || 0}%;background:var(--blue,#3d6fd6)"></i></span></span>
-    <span class="rf">👨‍🏫 ${esc(t.map(x => x.name).join('، ') || '—')}<span class="go">دخول ←</span></span></button>`; };
+    <span class="rf">👨‍🏫 ${esc(t.map(x => x.name).join('، ') || '—')}<span class="go">دخول ←</span></span></button>`; }; return card(c); }
+function vClasses() { const cls = TCLS();
+  return `<div class="hhead"><h2>🏫 ${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'}</h2><span class="mini2">${cls.length} صفوف · ${meT() ? 'اختر الصف للدخول إلى خططه وأنشطته وتقاريره' : 'اختر اسمك من «المعلم المتابع» لتظهر صفوفك فقط، أو ادخل أي صف'}</span></div>
+  <div class="rooms">${cls.map(roomCard).join('') || '<div class="empty">لا صفوف مرتبطة بهذا المعلم — اربطها من ☰ الإعدادات.</div>'}</div>
+  <div class="tools" style="margin-top:14px"><button class="btn w sm" data-t="home" type="button">→ الرجوع إلى الصفحة الرئيسية</button></div>`; }
+function vHome() {
+  const cls = TCLS(), P = progStats();
   const wkTxt = P.wk ? `الأسبوع ${P.wk} من ١٤ · ${PERN[curPeriod()].split('–')[0].trim()}` : 'حدّد «بداية الخطة» من الإعدادات';
   return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
-  <details class="roomsbox" id="roomsBox"${open ? ' open' : ''}><summary><span class="ri">🏫</span><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف</small><span class="chev">▾</span></summary>
-  <div class="rooms">${cls.map(card).join('') || '<div class="empty">لا صفوف مرتبطة بهذا المعلم — اربطها من ☰ الإعدادات.</div>'}</div></details>
+  <button class="roomsbtn" data-t="classes" type="button"><span class="ri">🏫</span><span class="rt2"><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف · ${cls.reduce((a, c) => a + ALL().filter(s => s.cls === c).length, 0)} طالبًا</small></span><span class="rcl">${cls.slice(0, 6).map(c => `<span class="pill">${esc(c)}</span>`).join('')}${cls.length > 6 ? '<span class="pill">…</span>' : ''}</span><span class="go">دخول ←</span></button>
   <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
   <div class="hstats">
    <div class="hs k1"><span class="hi">🧑‍🎓</span><b data-count="${P.n}">${P.n}</b><span>طلاب البرنامج</span><small>${P.cats.map((n, i) => `${CATS[i + 1]} ${n}`).join(' · ')}</small></div>
@@ -894,14 +912,14 @@ function vHome() {
 }
 
 function vRoom() {
-  if (!UI.room) { tab = 'home'; return vHome(); }
+  if (!UI.room) { tab = 'classes'; return vClasses(); }
   const r = roomStats(UI.room), t = teacherOfCls(UI.room);
   const cnt = {ind: Object.entries(S.logs).filter(([k]) => r.l.some(s => s.id === k)).reduce((a, [, l]) => a + (l.e || []).length, 0), cls: Object.values(S.cf).filter(x => x.cls === UI.room).length, studs: r.n};
   return `<div class="rhead"><div><h2>🏫 ${esc(clsName(UI.room))}</h2><span class="mini2">👨‍🏫 ${esc(t.map(x => x.name).join('، ') || '—')} · ${r.n} طالبًا</span></div>
   <div class="rcats">${r.cats.map((n, i) => n ? `<span class="cat cat${i + 1}">${CATS[i + 1]} ${n}</span>` : '').join('')}</div>
   <div class="rk"><span>إنجاز الأنشطة <b>${fmt(r.prog, 0)}%</b></span><span>انتظام الحضور <b>${attPct(r.att)}</b></span></div></div>
   <div class="tiles">${ROOM_T.map(([k, ic, n, d]) => `<button class="tile" data-t="${k}" type="button"><span class="ti">${ic}</span><b>${n}</b><small>${d}</small>${cnt[k] != null ? `<span class="tc">${cnt[k]}</span>` : ''}</button>`).join('')}</div>
-  <div class="tools" style="margin-top:12px"><button class="btn w sm" data-t="home" type="button">→ الرجوع إلى الصفوف</button><span class="mini2">طلاب هذا الصف: ${r.l.map(s => `<button class="lnk" data-open="${s.id}">${esc(s.name)}</button>`).join(' · ') || '—'}</span></div>`;
+  <div class="tools" style="margin-top:12px"><button class="btn w sm" data-t="classes" type="button">→ الرجوع إلى الصفوف</button><span class="mini2">طلاب هذا الصف: ${r.l.map(s => `<button class="lnk" data-open="${s.id}">${esc(s.name)}</button>`).join(' · ') || '—'}</span></div>`;
 }
 
 /* ---------- dashboard ---------- */
@@ -1315,7 +1333,7 @@ document.addEventListener('click', async ev => {
   if (b.id === 'burger') { menu($('#tabs').hidden); return; }
   if (b.id === 'pwGo') { if (await checkPw($('#pwIn').value)) { unlocked = true; render(); } else { $('#pwMsg').textContent = 'كلمة المرور غير صحيحة'; } return; }
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
-  if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'home'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
+  if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'classes'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.msall != null) { b.closest('.msel').querySelectorAll('.mlist input').forEach(i => i.checked = b.dataset.msall === '1'); updMsel(b.closest('.msel')); return; }
   if (b.dataset.stab) { UI.sTab = b.dataset.stab; render(); return; }
   if (b.dataset.look) { const L = curLook(); const k = b.dataset.look; L[k] = ['fs', 'rad', 'hdr'].includes(k) ? +b.dataset.v : b.dataset.v; if (k === 'theme') L.c = ''; UI.lookDraft = L; applyLook(L); render(); return; }
@@ -1395,7 +1413,7 @@ document.addEventListener('change', async ev => {
   const t = ev.target;
   if (t.closest('details.msel')) { updMsel(t.closest('details.msel')); return; }
   const id = t.id;
-  if (id === 'meSel') { me = t.value; try { localStorage.setItem(LK + '-me', me); } catch (e) {} UI.cfT = me; UI.room = ''; tab = 'home'; UI.fCls = ''; UI.attCls = ''; UI.rCls = ''; UI.cfCls = ''; UI.pStu = []; renderMeta(); render(); return; }
+  if (id === 'meSel') { me = t.value; try { localStorage.setItem(LK + '-me', me); } catch (e) {} UI.cfT = me; UI.room = ''; tab = tab === 'classes' ? 'classes' : 'home'; UI.fCls = ''; UI.attCls = ''; UI.rCls = ''; UI.cfCls = ''; UI.pStu = []; renderMeta(); render(); return; }
   const map = {fCat: 'fCat', fCls: 'fCls', fSid: 'sid', rSid: 'rSid', rCat: 'rCat', rCls: 'rCls', attCat: 'attCat', attCls: 'attCls', attDate: 'attDate', cfDate: 'cfDate', cfPer: 'cfPer', cfT: 'cfT'};
   if (map[id]) { UI[map[id]] = t.value; render(); return; }
   if (id === 'fMine') { UI.mine = t.checked; render(); return; }
