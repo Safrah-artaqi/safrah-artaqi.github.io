@@ -472,6 +472,46 @@ table.cf td.mini2{min-width:120px}table.cf td:last-child{min-width:200px}
 .swatch.cust input::-webkit-color-swatch-wrapper{padding:3px}.swatch.cust input::-webkit-color-swatch{border:0;border-radius:50%}
 .swatch.cust input::-moz-color-swatch{border:0;border-radius:50%}
 .copy{text-align:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line2);font-size:12.5px;font-weight:700;color:var(--muted);font-family:var(--fh)}@media print{.copy{display:none}}
+/* ===== home hero, animated logo, stats ===== */
+.hero{display:flex;align-items:center;gap:22px;margin-top:12px;padding:18px 22px;background:linear-gradient(135deg,#fff 0%,var(--teal-l) 100%);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh1);overflow:hidden;position:relative}
+.hero::after{content:'';position:absolute;inset-inline-end:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,106,.25),transparent 70%);pointer-events:none}
+.hlogo{flex:none;width:150px;height:150px}
+.logo{width:100%;height:100%;overflow:visible}
+.lg-ring{transform-origin:110px 110px;animation:lgSpin 18s linear infinite}
+.lg-steps .st{transform-box:fill-box;transform-origin:bottom;animation:lgRise 3.6s ease-in-out infinite}
+.lg-steps .s2{animation-delay:.25s}.lg-steps .s3{animation-delay:.5s}.lg-steps .s4{animation-delay:.75s}
+.lg-star{transform-box:fill-box;transform-origin:center;animation:lgStar 3.6s ease-in-out infinite}
+.lg-arrow{animation:lgDash 2.4s linear infinite}
+.lg-ain{animation:lgAin 3.6s ease-in-out infinite}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+@keyframes lgRise{0%,100%{transform:scaleY(.82)}45%,60%{transform:scaleY(1)}}
+@keyframes lgStar{0%,100%{transform:translateY(6px) rotate(-8deg) scale(.92)}50%{transform:translateY(-6px) rotate(10deg) scale(1.08)}}
+@keyframes lgDash{to{stroke-dashoffset:-26}}
+@keyframes lgAin{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media (prefers-reduced-motion:reduce){.logo *{animation:none!important}}
+.htx h2{margin:0;font-size:24px;color:var(--teal-d);font-family:var(--fh)}
+.htx .tag{margin:2px 0 8px;font-weight:800;color:#c98a14;font-family:var(--fh)}
+.htx p{margin:0;line-height:1.95;color:var(--ink);font-size:14px}
+.roomsbox{margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh1)}
+.roomsbox>summary{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;list-style:none}
+.roomsbox>summary::-webkit-details-marker{display:none}
+.roomsbox>summary .ri{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--teal);font-size:21px}
+.roomsbox>summary b{font-family:var(--fh);font-size:18px;color:var(--teal-d)}
+.roomsbox>summary small{color:var(--muted);font-weight:600}
+.roomsbox>summary .chev{margin-inline-start:auto;font-size:18px;color:var(--teal);transition:transform .2s}
+.roomsbox[open]>summary .chev{transform:rotate(180deg)}
+.roomsbox[open]>summary{border-bottom:1px solid var(--line)}
+.roomsbox>.rooms{padding:14px}
+.hstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.hs{position:relative;display:grid;gap:1px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:var(--sh1);border-top:4px solid var(--kc,var(--teal))}
+.hs.k1{--kc:var(--teal)}.hs.k2{--kc:#c98a14}.hs.k3{--kc:var(--blue,#3d6fd6)}.hs.k4{--kc:#23925a}.hs.k5{--kc:var(--navy)}
+.hs .hi{position:absolute;top:10px;inset-inline-end:12px;font-size:20px;opacity:.85}
+.hs b{font-family:var(--fh);font-size:28px;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums}
+.hs>span:not(.hi){font-weight:800;color:var(--teal-d);font-size:13.5px}
+.hs small{color:var(--muted);font-size:11.5px}
+.hs.wide{grid-column:1/-1;display:flex;align-items:center;gap:12px}.hs.wide .hi{position:static}
+.hs .wk{flex:1;display:grid;gap:5px;font-weight:700;color:var(--ink);font-size:13.5px}
+@media (max-width:760px){.hero{flex-direction:column;text-align:center;padding:16px}.hlogo{width:120px;height:120px}.hstats{grid-template-columns:1fr 1fr}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -792,8 +832,10 @@ function render() {
   if (!ready) { v.innerHTML = '<div class="loading">⏳ جارٍ تحميل البيانات…</div>'; return; }
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
   const f = {guide: vGuide, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
+  setTimeout(countUp, 0);
   v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + f(); renderSum(); if (tab === 'print') fillFrame();
 }
+function countUp() { if (countUp.done || !document.querySelector('.hs b[data-count]')) return; countUp.done = 1; document.querySelectorAll('.hs b[data-count]').forEach(b => { const n = +b.dataset.count; if (!n || b.dataset.done) return; b.dataset.done = 1; const t0 = performance.now(); const f = t => { const k = Math.min(1, (t - t0) / 900); b.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); }
 function menu(open) { const m = $('#tabs'), bt = $('#burger'); if (!m) return; m.hidden = !open; bt.setAttribute('aria-expanded', String(!!open)); bt.classList.toggle('on', !!open); }
 function renderMeta() {
   const n = STU().length;
@@ -813,18 +855,44 @@ function renderSum() {
 const ROOM_T = [['ind', '📋', 'الخطط الفردية', 'متابعة خطة كل طالب: الأهداف والأنشطة والملاحظات'], ['grp', '👥', 'خطط الفئات', 'متابعة جماعية لطلاب الفئة نفسها'], ['print', '🖨️', 'طباعة الأنشطة', 'أنشطة كل طالب بحسب فترته ومستواه'], ['att', '🗓️', 'الحضور', 'حصة البرنامج والفسحة'], ['cls', '🏫', 'المتابعة الصفية', 'مؤشرات الأداء داخل الفصل'], ['rep', '📄', 'التقارير', 'تقارير الطلاب وتقرير الصف (PDF)'], ['studs', '🧑‍🎓', 'الطلاب', 'إضافة الطلاب وتعديل بياناتهم']];
 function roomStats(c) { const l = ALL().filter(s => s.cls === c); const g = l.reduce((a, s) => a + [...givenSet(s.id)].filter(k => !k.includes('أ') && !k.includes('ب')).length, 0);
   const at = l.map(s => attStats(s.id).pct).filter(x => x != null); return {l, n: l.length, prog: l.length ? g / (l.length * 60) * 100 : 0, att: at.length ? at.reduce((a, b) => a + b, 0) / at.length : null, cats: [1, 2, 3, 4].map(k => l.filter(s => catOf(s.total) === k).length)}; }
+const LOGO = `<svg class="logo" viewBox="0 0 220 220" role="img" aria-label="شعار برنامج بالعربية أرتقي"><defs><linearGradient id="lgA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="var(--navy)"/><stop offset="1" stop-color="var(--teal)"/></linearGradient><linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#f0a92e"/></linearGradient></defs>
+<circle class="lg-ring" cx="110" cy="110" r="100" fill="none" stroke="url(#lgA)" stroke-width="6" stroke-dasharray="14 10"/>
+<circle cx="110" cy="110" r="86" fill="var(--teal-l)"/>
+<g class="lg-steps"><rect class="st s1" x="52" y="132" width="30" height="30" rx="5" fill="url(#lgA)" opacity=".55"/><rect class="st s2" x="86" y="112" width="30" height="50" rx="5" fill="url(#lgA)" opacity=".75"/><rect class="st s3" x="120" y="90" width="30" height="72" rx="5" fill="url(#lgA)" opacity=".9"/><rect class="st s4" x="154" y="68" width="16" height="94" rx="5" fill="url(#lgA)"/></g>
+<path class="lg-book" d="M40 166 Q75 152 110 168 Q145 152 180 166 L180 176 Q145 162 110 178 Q75 162 40 176 Z" fill="var(--navy)"/>
+<text class="lg-ain" x="67" y="124" font-family="Cairo, sans-serif" font-weight="800" font-size="40" fill="var(--navy)" text-anchor="middle">ع</text>
+<g class="lg-star"><path d="M162 30 l6 13 14 2 -10 10 2 14 -12 -7 -12 7 2 -14 -10 -10 14 -2z" fill="url(#lgB)" stroke="#fff" stroke-width="2"/></g>
+<path class="lg-arrow" d="M60 100 Q100 60 150 52" fill="none" stroke="#f0a92e" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 7"/></svg>`;
+const ABOUT = 'برنامج علاجي إثرائي لتنمية مهارات اللغة العربية لدى الطلاب الناطقين بغير العربية في مدرسة سافرة الابتدائية الإعدادية للبنين. يُصنَّف الطلاب بحسب الاختبار القبلي إلى أربع فئات، ويُبنى لكل طالب خطة فردية تبدأ من مستواه في كل كفاية (الاستماع، القراءة الصامتة، الكتابة، القراءة الجهرية، التحدث) وتتدرّج صعودًا، عبر ٦٠ نشاطًا متدرّجًا لكل فئة، في حصة أسبوعية وفسحتين، مع متابعة صفية وتقارير دورية لكل طالب.';
+function progStats() { const st = ALL(); let acts = 0; st.forEach(s => acts += givenSet(s.id).size);
+  const att = Object.values(S.att); const ses = new Set(att.filter(d => d.type === 'ses').map(d => d.date)).size, brk = new Set(att.filter(d => d.type === 'brk').map(d => d.date)).size;
+  const fol = Object.values(S.logs).reduce((a, l) => a + (l.e || []).length, 0) + Object.keys(S.glogs).length + Object.keys(S.cf).length;
+  let wk = null; if (S.cfg.start) { const w = Math.floor((new Date(today()) - new Date(S.cfg.start)) / 864e5 / 7); wk = Math.max(3, Math.min(14, 3 + w)); }
+  const gb = st.reduce((a, s) => a + [...givenSet(s.id)].filter(k => k.startsWith(bookOf(s) + ':')).length, 0);
+  return {n: st.length, cats: [1, 2, 3, 4].map(k => st.filter(s => catOf(s.total) === k).length), acts, ses, brk, fol, wk, prog: st.length ? gb / (st.length * 60) * 100 : 0}; }
 function vHome() {
-  const cls = TCLS();
+  const cls = TCLS(), P = progStats(); const open = UI.roomsOpen ?? !!meT();
   const card = c => { const r = roomStats(c), t = teacherOfCls(c);
     return `<button class="room" data-room="${esc(c)}" type="button"><span class="rt"><b>${esc(clsName(c))}</b><span class="rn">${r.n} طالبًا</span></span>
     <span class="rcats">${r.cats.map((n, i) => n ? `<span class="cat cat${i + 1}">${CATS[i + 1]} ${n}</span>` : '').join('') || '<span class="mini2">لا طلاب</span>'}</span>
     <span class="rbar"><span>إنجاز الأنشطة <b>${fmt(r.prog, 0)}%</b></span><span class="prog"><i style="width:${Math.min(100, r.prog)}%"></i></span></span>
     <span class="rbar"><span>انتظام الحضور <b>${attPct(r.att)}</b></span><span class="prog"><i style="width:${r.att || 0}%;background:var(--blue,#3d6fd6)"></i></span></span>
     <span class="rf">👨‍🏫 ${esc(t.map(x => x.name).join('، ') || '—')}<span class="go">دخول ←</span></span></button>`; };
-  return `<div class="hhead"><h2>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع الصفوف'}</h2><span class="mini2">${meT() ? 'اختر الصف للدخول إلى خططه وأنشطته وتقاريره' : 'اختر اسمك من «المعلم المتابع» لتظهر صفوفك فقط، أو ادخل أي صف'}</span></div>
-  <div class="rooms">${cls.map(card).join('') || '<div class="empty">لا صفوف مرتبطة بهذا المعلم — اربطها من ⚙️ الإعدادات.</div>'}</div>
-  <div class="gl"><button class="gtile" data-t="dash" type="button">📊 <b>لوحة المتابعة العامة</b></button></div>`;
+  const wkTxt = P.wk ? `الأسبوع ${P.wk} من ١٤ · ${PERN[curPeriod()].split('–')[0].trim()}` : 'حدّد «بداية الخطة» من الإعدادات';
+  return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
+  <details class="roomsbox" id="roomsBox"${open ? ' open' : ''}><summary><span class="ri">🏫</span><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف</small><span class="chev">▾</span></summary>
+  <div class="rooms">${cls.map(card).join('') || '<div class="empty">لا صفوف مرتبطة بهذا المعلم — اربطها من ☰ الإعدادات.</div>'}</div></details>
+  <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
+  <div class="hstats">
+   <div class="hs k1"><span class="hi">🧑‍🎓</span><b data-count="${P.n}">${P.n}</b><span>طلاب البرنامج</span><small>${P.cats.map((n, i) => `${CATS[i + 1]} ${n}`).join(' · ')}</small></div>
+   <div class="hs k2"><span class="hi">🧩</span><b data-count="${P.acts}">${P.acts}</b><span>الأنشطة المقدَّمة</span><small>إنجاز الخطط ${fmt(P.prog, 0)}%</small></div>
+   <div class="hs k3"><span class="hi">📘</span><b data-count="${P.ses}">${P.ses}</b><span>الحصص المقدَّمة</span><small>وفسحات الدعم: ${P.brk}</small></div>
+   <div class="hs k4"><span class="hi">🗂️</span><b data-count="${P.fol}">${P.fol}</b><span>المتابعات المسجّلة</span><small>فردية وفئات وصفية</small></div>
+   <div class="hs k5 wide"><span class="hi">🗓️</span><div class="wk"><span>${wkTxt}</span><span class="prog"><i style="width:${P.wk ? (P.wk - 2) / 12 * 100 : 0}%"></i></span></div></div>
+  </div>
+  <div class="gl"><button class="gtile" data-t="dash" type="button">📊 <b>لوحة المتابعة التفصيلية</b></button></div>`;
 }
+
 function vRoom() {
   if (!UI.room) { tab = 'home'; return vHome(); }
   const r = roomStats(UI.room), t = teacherOfCls(UI.room);
@@ -1321,6 +1389,7 @@ document.addEventListener('click', async ev => {
 });
 function ensLists() { if (!S.cfg.lists) S.cfg.lists = JSON.parse(JSON.stringify(DEF_LISTS)); Object.keys(DEF_LISTS).forEach(k => { if (!S.cfg.lists[k]) S.cfg.lists[k] = JSON.parse(JSON.stringify(DEF_LISTS[k])); }); }
 function updMsel(det) { const n = det.querySelectorAll('.mlist input:checked').length; det.querySelector('summary').textContent = n ? '✔ ' + n + ' محدّد' : 'اختر…'; }
+document.addEventListener('toggle', ev => { if (ev.target.id === 'roomsBox') UI.roomsOpen = ev.target.open; }, true);
 document.addEventListener('input', ev => { if (ev.target.id === 'lookC') { const L = curLook(); L.c = ev.target.value; UI.lookDraft = L; applyLook(L); } });
 document.addEventListener('change', async ev => {
   const t = ev.target;
