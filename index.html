@@ -1408,6 +1408,7 @@ const GUIDE = [
 ];
 function vGuide() {
   return `<div class="hhead"><h2>📘 دليل استخدام المنصة</h2><span class="mini2">خطوات مختصرة لكل قسم — اضغط على العنوان لعرض التفاصيل</span></div>
+  <div class="reprow" style="margin:0 0 10px"><a class="btn" href="guide.pdf" target="_blank" rel="noopener" download="دليل_استخدام_منصة_بالعربية_أرتقي.pdf">📥 تنزيل الدليل المصوّر PDF</a><span class="mini2">دليل مفصّل بالصور لكل أقسام المنصة</span></div>
   <div class="gtoc">${GUIDE.map(([ic, t], i) => `<a href="#g${i}" class="pill">${ic} ${t}</a>`).join('')}</div>
   <div class="gsecs">${GUIDE.map(([ic, t, steps], i) => `<details class="gsec" id="g${i}"${i < 3 ? ' open' : ''}><summary><span class="gn">${i + 1}</span><span class="gi">${ic}</span><b>${t}</b></summary><ol>${steps.map(x => `<li>${x}</li>`).join('')}</ol></details>`).join('')}</div>`;
 }
