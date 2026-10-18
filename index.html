@@ -559,6 +559,7 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .chkl .mlist label.sc.on{background:var(--teal-l);border-color:var(--teal)}
 .chkl .mlist label.sc:hover{border-color:var(--teal)}
 .tools.chkwrap{display:block}
+.pbar{margin-top:10px}.pbar .btn{margin-inline-start:4px}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -849,7 +850,7 @@ function msel(name, groups, sel, ph, cls) {
 }
 function chkList(name, list, sel, title) { sel = new Set(sel || []); const n = list.filter(s => sel.has(s.id)).length;
   return `<details class="msel chkl" data-ms="${name}" open><summary>${n}</summary><div class="chh"><b>${title || 'الطلاب'}</b><span class="cnt">${n} من ${list.length} محدّد</span><span class="mall"><button type="button" data-msall="1">✔ تحديد الكل</button><button type="button" data-msall="0">✕ إلغاء التحديد</button></span></div><div class="mlist">${
-    list.map(s => `<label class="sc${sel.has(s.id) ? ' on' : ''}"><input type="checkbox" value="${esc(s.id)}"${sel.has(s.id) ? ' checked' : ''}><span class="nm2">${esc(s.name)}</span><span class="meta2">${esc(s.cls)} · ${KEYS.map(k => STARS[startLv(pctOf(s, k))]).join(' ')}</span></label>`).join('') || '<div class="empty">لا يوجد طلاب في هذه الفئة.</div>'}</div></details>`; }
+    list.map(s => `<label class="sc${sel.has(s.id) ? ' on' : ''}"><input type="checkbox" value="${esc(s.id)}"${sel.has(s.id) ? ' checked' : ''}><span class="nm2">${esc(s.name)}</span><span class="meta2">${esc(s.cls)} · ${lvStr(s)}</span></label>`).join('') || '<div class="empty">لا يوجد طلاب في هذه الفئة.</div>'}</div></details>`; }
 const mselVal = name => $$(`details[data-ms="${name}"] .mlist input:checked`).map(i => i.value);
 function goalGroups(s) {
   const order = s ? [...weak(s), ...KEYS.filter(k => !weak(s).includes(k)), 'G'] : [...KEYS, 'G'];
@@ -1015,6 +1016,7 @@ function vInd() {
   return bar + `<div class="pf"><div class="pcard"><h2>${esc(s.name)}</h2><div class="sub">${esc(clsName(s.cls))} – الحلقة ${esc(s.halqa || halqaOf(s.cls))} · ${catChip(c)} ${CATN[c]} (${CATR[c]}) · النسبة القبلية ${fmt(s.total)}% · ${esc(s.reg || '')}</div>
   <div class="sub">الكتاب: <b>${BOOKN[book]}</b>${bank ? ' + ' + BOOKN[bank] : ''} · المعلم: <b>${esc(teacherOfCls(s.cls).map(t => t.name).join('، ') || '—')}</b></div></div>
   <div class="ring">${ring([...given].filter(x => x.startsWith(book + ':')).length / (acts.length || 60) * 100, 86)}<div class="rt"><span>الأنشطة المنجزة: <b>${[...given].filter(x => x.startsWith(book + ':')).length} / ${acts.length}</b></span><span>حضور حصة البرنامج: <b>${attPct(attStats(s.id, 'ses').pct)}</b></span><span>حضور الفسحة: <b>${attPct(attStats(s.id, 'brk').pct)}</b></span></div></div></div>
+  <div class="tools pbar"><span class="mini2">🖨️ الطباعة (PDF):</span>${pdfBtn('ind1', 'خطة هذا الطالب')}${pdfBtn('indAll', 'خطط جميع الطلاب في القائمة (' + filtered().length + ')', '')}</div>
   <h2 class="sec">🎯 الخطة الفردية بحسب مستوى المهارات <small>يبدأ الطالب في كل كفاية من مستواه ثم يتدرّج صعودًا</small></h2>
   <div class="tw"><table class="compt"><thead><tr><th class="nm">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>الأنشطة المنجزة</th><th>التقدّم</th><th class="nm">الأنشطة المقترحة التالية</th></tr></thead><tbody>${rows}</tbody></table></div>
   <div class="card o" style="margin-top:14px"><div class="ch"><h3>✏️ تسجيل متابعة جديدة للخطة الفردية</h3><small>الأهداف والأنشطة المظلّلة بالأخضر موافقة لمستواه</small></div><div class="cb">${entryForm('i', s, book, bank, given)}</div></div>
@@ -1030,7 +1032,7 @@ function vGrp() {
   const studChecks = `<div class="wide" style="grid-column:1/-1">${chkList('gStud', list, list.map(s => s.id), '👥 الطلاب المشاركون – اضغط المربع بجانب الاسم')}</div>`;
   const prog = list.map(s => { const g = givenSet(s.id), e = entriesOf(s.id), gd = goalsDone(s.id);
     return `<tr><td class="nm"><button class="lnk" data-open="${s.id}">${esc(s.name)}</button></td><td>${esc(s.cls)}</td><td>${fmt(s.total)}%</td><td>${KEYS.map(k => `<span title="${COMP[k]}">${STARS[startLv(pctOf(s, k))]}</span>`).join(' · ')}</td><td>${[...g].filter(x => x.startsWith(book + ':')).length} / 60</td><td>${Object.values(gd).filter(x => x === 'full').length}</td><td>${e.length}</td><td>${esc((e[0] || {}).date || '—')}</td><td>${attPct(attStats(s.id, 'ses').pct)}</td></tr>`; }).join('');
-  return `<div class="tools"><span class="seg">${CATSV().map(k => `<button type="button" data-cat="${k}" aria-pressed="${k === c}">${CATN[k]}</button>`).join('')}</span>${scopeTag()}</div>
+  return `<div class="tools"><span class="seg">${CATSV().map(k => `<button type="button" data-cat="${k}" aria-pressed="${k === c}">${CATN[k]}</button>`).join('')}</span>${scopeTag()}<span class="sp">${pdfBtn('grp', 'طباعة خطة الفئة PDF')}</span></div>
   <div class="kpis"><div class="kpi k1"><span>طلاب الفئة</span><b>${list.length}</b></div><div class="kpi k2"><span>متابعات خطة الفئة</span><b>${Object.values(S.glogs).filter(g => +g.cat === c).length}</b></div><div class="kpi k3"><span>الكتاب</span><b style="font-size:17px">${BOOKN[book]}${banks.length ? ' + البنكان' : ''}</b></div><div class="kpi k4"><span>نوع الخطة</span><b style="font-size:17px">${{1: 'إثرائية متقدّمة', 2: 'إثرائية', 3: 'تطويرية', 4: 'علاجية'}[c]}</b></div></div>
   <div class="card o" style="margin-top:14px"><div class="ch"><h3>✏️ تسجيل متابعة لخطة ${CATN[c]}</h3><small>تُضاف الأنشطة إلى سجلّ كل طالب مشارك</small></div><div class="cb"><div class="frm">
   <label>التاريخ<input type="date" id="gDate" value="${today()}"></label><label>المعلم المتابع${tSelect('gT', me)}</label>
@@ -1074,6 +1076,7 @@ function vAtt() {
   return `<div class="tools"><span class="seg">${Object.entries(ATYPE).map(([k, v]) => `<button type="button" data-att="${k}" aria-pressed="${k === type}">${k === 'ses' ? '📘' : '🌤️'} ${v}</button>`).join('')}</span>
   <label>التاريخ: <input type="date" id="attDate" value="${UI.attDate}"></label><span class="mini2">${dayName(UI.attDate)}</span><label>الفئة: ${catSelect('attCat', UI.attCat, 'كل الفئات')}</label><label>الصف: ${clsSelect('attCls', UI.attCls, 'كل الصفوف')}</label>
   <button class="btn sm" id="attAll" type="button">✓ الكل حاضر</button>
+  <span class="sp reprow"><label>الشهر: <input type="month" id="attM" value="${UI.attM || today().slice(0, 7)}"></label>${pdfBtn('attM', 'الحضور والغياب الشهري PDF')}</span>
   <span class="leg2">${Object.entries(ATT).map(([k, v]) => `<span class="ab ${v[1]}">${v[2]}</span> ${v[0]} <b>${cnt[k]}</b>`).join(' · ')}</span></div>
   <p class="hint">اضغط على الخانة للتنقّل بين: حاضر ← غائب ← بعذر ← متأخر ← فارغ. ${type === 'ses' ? 'حصة البرنامج: يوم واحد في الأسبوع.' : 'الفسحة: يومان في الأسبوع.'}</p>
   <div class="tw"><table class="att"><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>الفئة</th><th>اليوم ${esc(UI.attDate)}</th>${dates.filter(d => d !== UI.attDate).map(d => `<th class="dh"><button data-attday="${d}"><b>${d.slice(8)}/${d.slice(5, 7)}</b><small>${dayName(d)}</small></button></th>`).join('')}<th class="sm">✓</th><th class="sm">غ</th><th class="sm">ع</th><th class="sm">ت</th><th class="sm">%</th></tr></thead><tbody>${
@@ -1149,7 +1152,7 @@ function vRep() {
   if (m === 'stu' && UI.repPar && S.students[UI.rSid]) body = reportParent(S.students[UI.rSid]);
   if (m === 'stu') ctl = `<div class="tools"><span class="seg"><button type="button" data-rpar="0" aria-pressed="${!UI.repPar}">📄 تقرير المتابعة</button><button type="button" data-rpar="1" aria-pressed="${!!UI.repPar}">👪 تقرير وليّ الأمر (عربي / English)</button></span></div>` + ctl;
   return `<div class="tools"><span class="seg">${[['stu', '🧑‍🎓 تقرير طالب'], ['cat', '📚 تقرير فئة'], ['cls', '🏫 تقرير صف / معلم']].map(([k, v]) => `<button type="button" data-rep="${k}" aria-pressed="${k === m}">${v}</button>`).join('')}</span>
-  <span class="sp reprow"><button class="btn o" id="rPdf" type="button">📄 تنزيل التقرير PDF</button>${m !== 'stu' ? '<button class="btn" id="rPdfAll" type="button">📚 تقارير الطلاب الفردية (PDF واحد)</button>' : ''}<button class="btn w" id="rPrint" type="button">🖨️ طباعة</button></span></div>${ctl}<div id="printArea"><div class="rpbox">${body || '<div class="empty">اختر طالبًا.</div>'}</div></div>`;
+  <span class="sp reprow"><button class="btn o" id="rPdf" type="button">📄 تنزيل التقرير PDF</button>${m !== 'stu' ? '<button class="btn" id="rPdfAll" type="button">📚 تقارير الطلاب الفردية (PDF واحد)</button>' : ''}<button class="btn w" id="rPrint" type="button">🖨️ طباعة</button>${pdfBtn('parAll', m === 'stu' ? 'تقارير أولياء الأمور لكل طلاب القائمة' : 'تقارير أولياء الأمور (PDF واحد)', '')}</span></div>${ctl}<div id="printArea"><div class="rpbox">${body || '<div class="empty">اختر طالبًا.</div>'}</div></div>`;
 }
 
 /* ---------- printing activities ---------- */
@@ -1311,6 +1314,57 @@ function vSet() {
   return `<div class="tools setnav"><span class="seg">${SET_T.map(([k, n]) => `<button type="button" data-stab="${k}" aria-pressed="${k === UI.sTab}">${n}</button>`).join('')}</span></div>` + P[UI.sTab]();
 }
 
+/* ---------- printable PDF documents ---------- */
+const PDOC_CSS = `.rp .pills2 span{display:inline-block;border:1px solid #d4dbe3;border-radius:6px;padding:0 6px;margin:1px 2px;font-size:11px;white-space:nowrap}.rp .pills2 span.ok{background:#e8f5ee;border-color:#b9dfc9;color:#1d6b44;font-weight:700}.rp table.am td,.rp table.am th{padding:3px 4px;font-size:11px;text-align:center}.rp table.am td.l{text-align:right;white-space:nowrap}.rp .mk{font-weight:800}.rp .mk.P{color:#1d7a4a}.rp .mk.A{color:#c94242}.rp .mk.E{color:#9a6a00}.rp .mk.L{color:#3d6fd6}.rp .lg2{font-size:11.5px;color:#5d6a78;margin:4px 0}`;
+const docHead = (t, sub) => `<style>${RP_CSS}${PDOC_CSS}</style><div class="rp"><div class="hd"><img src="${LETTERHEAD}" alt=""></div><div class="tb"><h1>${t}</h1><small>${sub || `برنامج «بالعربية أرتقي» · ${esc(S.cfg.school)} · العام الدراسي ${esc(S.cfg.year)}`}</small></div>`;
+const docSig = (t) => `<div class="sig"><span>المعلم المتابع: ${esc(t || '')}<i></i></span><span>منسق البرنامج: ${esc(S.cfg.coord)}</span><span>مدير المدرسة: ${esc(S.cfg.principal)}</span></div></div>`;
+function planDoc(s) {
+  const c = catOf(s.total), book = bookOf(s), acts = D.books[book] || [], given = givenSet(s.id), PP = planPeriods(s), gd = goalsDone(s.id), ents = entriesOf(s.id);
+  const pOf = k => +Object.keys(PP).find(p => PP[p].includes(k));
+  const comp = KEYS.map(k => { const p = pctOf(s, k), ka = acts.filter(a => a.c === k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(p, 0)}%</td><td>${STARS[startLv(p)]} ${DN[startLv(p)]}</td><td>${PERN[pOf(k)].split(' – ')[0]}</td><td>${ka.filter(a => given.has(book + ':' + a.n)).length} / ${ka.length}</td></tr>`; }).join('');
+  const per = [1, 2, 3, 4].map(p => { const ks = PP[p].flatMap(k => acts.filter(a => a.c === k && a.d >= startLv(pctOf(s, k)))); return `<tr><td class="l"><b>${PERN[p].split(' – ')[0]}</b><br><small>${PERN[p].split(' – ')[1]}</small></td><td class="l">${PP[p].map(k => COMP[k]).join('، ')}</td><td class="l pills2">${ks.map(a => `<span class="${given.has(book + ':' + a.n) ? 'ok' : ''}">${given.has(book + ':' + a.n) ? '✓ ' : ''}${a.n} ${STARS[a.d]}</span>`).join('') || '—'}</td></tr>`; }).join('');
+  const goals = Object.entries(gd).map(([g, a]) => `<span class="pill ${a === 'full' ? 'g' : ''}">${esc((goalOf(g) || {}).t || g)} – ${ACH[a] || ''}</span>`).join('');
+  return docHead('الخطة الفردية للطالب') + `<div class="info"><span>اسم الطالب: <b>${esc(s.name)}</b></span><span>الصف: <b>${esc(clsName(s.cls))}</b></span><span>الفئة: <b>${CATN[c]}</b></span><span>النسبة القبلية: <b>${fmt(s.total)}%</b></span><span>الكتاب: <b>${BOOKN[book]}</b></span><span>التاريخ: <b>${today()}</b></span></div>
+  <h2>مستوى المهارات ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>فترة التركيز</th><th>المنجز</th></tr>${comp}</table>
+  <h2>خطة الفترات والأنشطة المقرّرة</h2><p class="lg2">تبدأ الخطة بالكفاية الأضعف، ويتدرّج الطالب من مستوى بدئه صعودًا. الأنشطة المعلَّمة بـ ✓ أُعطيت للطالب.</p><table><tr><th class="l" style="width:16%">الفترة</th><th class="l" style="width:18%">الكفاية</th><th class="l">أرقام الأنشطة ومستواها</th></tr>${per}</table>
+  <h2>الأهداف</h2><div>${goals || '<span class="pill">لم تُسجَّل أهداف بعد</span>'}</div>
+  <h2>سجل المتابعة</h2><table><tr><th>التاريخ</th><th>المعلم</th><th class="l">الأنشطة</th><th>التحقّق</th><th class="l">ملاحظات</th></tr>${ents.slice(0, 10).map(e => `<tr><td>${esc(e.date)}</td><td>${esc(tName(e.tid))}</td><td class="l pills2">${(e.acts || []).map(a => `<span>${esc(actLabel(a))}</span>`).join('')}</td><td>${ACH[e.ach] || '—'}</td><td class="l">${esc(noteTxt(e))}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}</table>`
+  + docSig(teacherOfCls(s.cls).map(t => t.name).join('، '));
+}
+function groupDoc(c, list) {
+  const book = String(c), logs = Object.values(S.glogs).filter(g => +g.cat === c && (!list.length || (g.sids || []).some(x => list.some(s => s.id === x)))).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const rows = list.map((s, i) => { const g = [...givenSet(s.id)].filter(x => x.startsWith(book + ':')).length; return `<tr><td>${i + 1}</td><td class="l">${esc(s.name)}</td><td>${esc(s.cls)}</td><td>${fmt(s.total)}%</td><td style="font-size:10.5px">${lvStr(s)}</td><td>${planPeriods(s)[1].map(k => SH[k]).join('، ')}</td><td>${g} / 60</td><td>${attPct(attStats(s.id, 'ses').pct)}</td></tr>`; }).join('');
+  const secs = KEYS.map(k => { const a = (D.books[book] || []).filter(x => x.c === k); return `<tr><td class="l">${COMP[k]}</td>${[1, 2, 3].map(d => `<td>${a.filter(x => x.d === d).map(x => x.n).join('، ') || '—'}</td>`).join('')}</tr>`; }).join('');
+  return docHead('خطة ' + CATN[c]) + `<div class="info"><span>الفئة: <b>${CATN[c]}</b> (${CATR[c]})</span><span>عدد الطلاب: <b>${list.length}</b></span><span>الكتاب: <b>${BOOKN[book]}</b></span><span>${UI.room ? 'الصف: <b>' + esc(clsName(UI.room)) + '</b>' : 'جميع الصفوف'}</span><span>التاريخ: <b>${today()}</b></span></div>
+  <h2>طلاب الفئة ومستوى البدء في كل كفاية</h2><table><tr><th>م</th><th class="l">الطالب</th><th>الصف</th><th>القبلي</th><th>مستوى البدء</th><th>تركيز الفترة الأولى</th><th>الأنشطة</th><th>الحضور</th></tr>${rows || '<tr><td colspan="8">—</td></tr>'}</table>
+  <h2>أنشطة كتاب الفئة بحسب الكفاية والمستوى</h2><table><tr><th class="l">الكفاية</th><th>★ أساسي</th><th>★★ متوسط</th><th>★★★ متقدم</th></tr>${secs}</table>
+  <h2>سجل متابعة خطة الفئة</h2><table><tr><th>التاريخ</th><th>المعلم</th><th>الطلاب</th><th class="l">الأنشطة</th><th>التحقّق</th><th class="l">ملاحظات</th></tr>${logs.slice(0, 12).map(e => `<tr><td>${esc(e.date)}</td><td>${esc(tName(e.tid))}</td><td>${(e.sids || []).length}</td><td class="l pills2">${(e.acts || []).map(a => `<span>${esc(actLabel(a))}</span>`).join('')}</td><td>${ACH[e.ach] || '—'}</td><td class="l">${esc(noteTxt(e))}</td></tr>`).join('') || '<tr><td colspan="6">—</td></tr>'}</table>`
+  + docSig(UI.room ? teacherOfCls(UI.room).map(t => t.name).join('، ') : '');
+}
+const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+function monthAttDoc(ym, list, scope) {
+  const [y, m] = ym.split('-').map(Number), title = 'سجل الحضور والغياب الشهري – ' + MONTHS[m - 1] + ' ' + y;
+  const tbl = type => { const days = Object.values(S.att).filter(d => d.type === type && (d.date || '').startsWith(ym)).map(d => d.date).sort();
+    const rows = list.map((s, i) => { const r = {P: 0, A: 0, E: 0, L: 0}; const cells = days.map(d => { const x = ((S.att[type + '_' + d] || {}).marks || {})[s.id]; if (x) r[x]++; return `<td>${x ? `<span class="mk ${x}">${ATT[x][2]}</span>` : ''}</td>`; }).join(''); const n = r.P + r.A + r.E + r.L;
+      return `<tr><td>${i + 1}</td><td class="l">${esc(s.name)}</td><td>${esc(s.cls)}</td>${cells}<td>${r.P}</td><td>${r.A}</td><td>${r.E}</td><td>${r.L}</td><td><b>${n ? fmt((r.P + r.L) / n * 100, 0) + '%' : '—'}</b></td></tr>`; }).join('');
+    return `<h2>${ATYPE[type]} – ${days.length} ${days.length === 1 ? 'يوم' : 'أيام'}</h2><table class="am"><tr><th>م</th><th class="l">الطالب</th><th>الصف</th>${days.map(d => `<th>${+d.slice(8)}/${+d.slice(5, 7)}<br><small>${dayName(d)}</small></th>`).join('') || '<th>لا أيام مسجّلة</th>'}<th>✓</th><th>غ</th><th>ع</th><th>ت</th><th>النسبة</th></tr>${rows || '<tr><td colspan="9">—</td></tr>'}</table>`; };
+  return docHead(title) + `<div class="info"><span>الشهر: <b>${MONTHS[m - 1]} ${y}</b></span><span>${esc(scope)}</span><span>عدد الطلاب: <b>${list.length}</b></span><span>تاريخ الطباعة: <b>${today()}</b></span></div>
+  <p class="lg2">الرموز: <span class="mk P">✓</span> حاضر · <span class="mk A">غ</span> غائب · <span class="mk E">ع</span> غائب بعذر · <span class="mk L">ت</span> متأخر · النسبة = (الحضور + التأخر) ÷ الأيام المرصودة</p>${tbl('ses')}${tbl('brk')}` + docSig(UI.room ? teacherOfCls(UI.room).map(t => t.name).join('، ') : '');
+}
+const lvStr = s => KEYS.map(k => `${SH[k]} ${STARS[startLv(pctOf(s, k))]}`).join(' · ');
+const pdfBtn = (doc, label, cls) => `<button class="btn ${cls || 'o'} sm" data-pdoc="${doc}" type="button">📄 ${label}</button>`;
+async function runPdoc(kind, bt) {
+  let list = [], name = '';
+  if (kind === 'ind1') { const s = S.students[UI.sid]; if (!s) return toast('اختر طالبًا'); list = [planDoc(s)]; name = 'الخطة_الفردية_' + s.name; }
+  else if (kind === 'indAll') { const l = filtered(); if (!l.length) return toast('لا يوجد طلاب'); list = l.map(planDoc); name = 'الخطط_الفردية_' + (UI.room ? clsName(UI.room) : 'الطلاب'); }
+  else if (kind === 'grp') { const c = +UI.cat; list = [groupDoc(c, STU().filter(s => catOf(s.total) === c))]; name = 'خطة_' + CATN[c].split('–')[0].trim() + (UI.room ? '_' + UI.room : ''); }
+  else if (kind === 'attM') { const ym = UI.attM || today().slice(0, 7); const l = STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls)); if (!l.length) return toast('لا يوجد طلاب');
+    list = [monthAttDoc(ym, l, UI.room ? 'الصف: ' + clsName(UI.room) : UI.attCls ? 'الصف: ' + clsName(UI.attCls) : UI.attCat ? CATN[UI.attCat] : 'جميع الطلاب')]; name = 'الحضور_الشهري_' + ym + (UI.room ? '_' + UI.room : ''); }
+  else if (kind === 'parAll') { const l = UI.rep === 'cat' ? STU().filter(s => String(catOf(s.total)) === String(UI.rCat)) : UI.rep === 'cls' ? STU().filter(s => s.cls === UI.rCls) : filtered(); if (!l.length) return toast('لا يوجد طلاب'); list = l.map(reportParent); name = 'تقارير_أولياء_الأمور_' + (UI.rep === 'cat' ? CATN[UI.rCat].split('–')[0].trim() : UI.rep === 'cls' ? UI.rCls : UI.room || 'الطلاب'); }
+  name = name.replace(/\//g, '-').replace(/\s+/g, '_');
+  if (bt) bt.disabled = true; await makePdf(list, name); if (bt) bt.disabled = false;
+}
+
 /* ---------- post-test ---------- */
 function vPost() {
   const list = STU();
@@ -1411,12 +1465,12 @@ const GUIDE = [
   ['☰', 'القائمة العلوية', ['زر المربّع ذي الخطوط الثلاث في زاوية الشريط العلوي يفتح القائمة: الصفحة الرئيسية، دليل الاستخدام، الإعدادات.', 'يُظهر الشريط العلوي مسار مكانك: 🏠 ← الصف ← القسم، وتستطيع الضغط على أيّ جزء منه للرجوع.']],
   ['👨‍🏫', 'اختيار المعلم والصفوف', ['اختر اسمك من «المعلم المتابع» في الشريط العلوي، فتظهر في الصفحة الرئيسية صفوفك فقط، كل صف في مستطيل يبيّن عدد طلابه وفئاتهم ونسبة الإنجاز والحضور.', 'اختيار «الكل (المنسق)» يُظهر جميع الصفوف.', 'اضغط على مستطيل الصف للدخول إليه.']],
   ['🏫', 'داخل الصف', ['تظهر خانات الصف: الخطط الفردية، خطط الفئات، طباعة الأنشطة، الحضور، المتابعة الصفية، التقارير، الطلاب.', 'كل خانة تعمل على طلاب هذا الصف فقط، وتظهر فيها فئات الصف الموجودة فقط.']],
-  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، مدى التحقّق، الدرجة، ثم اختر الأهداف والأنشطة التي أُعطيت والملاحظات والإجراءات والمقترحات من القوائم المنسدلة، واضغط «حفظ المتابعة».', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.']],
-  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'سجّل الأهداف والأنشطة واضغط «حفظ متابعة الفئة»؛ تُضاف الأنشطة تلقائيًّا إلى سجلّ كل طالب مشارك.']],
+  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، مدى التحقّق، الدرجة، ثم اختر الأهداف والأنشطة التي أُعطيت والملاحظات والإجراءات والمقترحات من القوائم المنسدلة، واضغط «حفظ المتابعة».', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
+  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'سجّل الأهداف والأنشطة واضغط «حفظ متابعة الفئة»؛ تُضاف الأنشطة تلقائيًّا إلى سجلّ كل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
   ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.']],
-  ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.']],
+  ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.', 'للتقرير الشهري: اختر «الشهر» ثم اضغط «📄 الحضور والغياب الشهري PDF»؛ يظهر لكل طالب حضوره في الحصص والفسحات خلال الشهر والمجاميع والنسبة.']],
   ['🏫', 'المتابعة الصفية', ['اختر التاريخ وفترة المتابعة، ثم قيّم كل طالب في المؤشرات (١–٤) وحدّد الدعم المقدَّم والتقدّم وملاحظات معلم الفصل.', 'في الأسفل: ملاحظات عامة، ثم التوصيات، ثم إجراءات معلم البرنامج، واضغط «حفظ المتابعة الصفية».']],
-  ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.']],
+  ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.', 'زر «📄 تقارير أولياء الأمور» يُنزّل تقارير أولياء الأمور (عربي / English) لكل طلاب القائمة أو الفئة أو الصف في ملف PDF واحد.']],
   ['📝', 'الاختبار البعدي', ['من داخل الصف اضغط خانة «الاختبار البعدي»، وأدخل درجات كل طالب في الكفايات الخمس (الرقم الباهت في الخانة هو درجته في القبلي)، ثم اضغط «حفظ درجات البعدي».', 'يظهر التحسّن تلقائيًّا في تقرير الطالب وتقرير الصف والفئة وتقرير وليّ الأمر وإحصائيات الصفحة الرئيسية، مع عدد من انتقلوا إلى فئة أعلى. تبقى خطة الطالب مبنية على القبلي.']],
   ['👪', 'تقرير وليّ الأمر', ['في «التقارير» ← «تقرير طالب» اضغط «تقرير وليّ الأمر (عربي / English)»، فيظهر تقرير مختصر باللغتين: الحضور، والأنشطة المنجزة، ومستوى المهارات، ونقاط القوة وما يحتاج إلى دعم، ونصائح للبيت، وتوصيات المعلم.', 'اضغط «تنزيل التقرير PDF» أو «طباعة» لإرساله إلى وليّ الأمر.']],
   ['🔔', 'التنبيهات', ['في الصفحة الرئيسية مربع «تنبيهات» يُظهر: الطلاب الذين غابوا آخر حصتين، والطلاب الذين لم تُسجَّل لهم متابعة منذ أسبوعين، والصفوف التي لم تُسجَّل لها متابعة صفية منذ ثلاثة أسابيع.', 'اضغط اسم الطالب لفتح خطته مباشرة، أو اسم الصف للدخول إليه. عند اختيار اسم المعلم تظهر تنبيهات صفوفه فقط.']],
@@ -1449,6 +1503,7 @@ document.addEventListener('click', async ev => {
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'classes'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.msall != null) { b.closest('.msel').querySelectorAll('.mlist input').forEach(i => i.checked = b.dataset.msall === '1'); updMsel(b.closest('.msel')); return; }
+  if (b.dataset.pdoc) { await runPdoc(b.dataset.pdoc, b); return; }
   if (b.dataset.rpar != null) { UI.repPar = b.dataset.rpar === '1'; render(); return; }
   if (b.dataset.stab) { UI.sTab = b.dataset.stab; render(); return; }
   if (b.dataset.look) { const L = curLook(); const k = b.dataset.look; L[k] = ['fs', 'rad', 'hdr'].includes(k) ? +b.dataset.v : b.dataset.v; if (k === 'theme') L.c = ''; UI.lookDraft = L; applyLook(L); render(); return; }
@@ -1535,6 +1590,7 @@ document.addEventListener('change', async ev => {
   const t = ev.target;
   if (t.closest('details.msel')) { updMsel(t.closest('details.msel')); return; }
   const id = t.id;
+  if (id === 'attM') { UI.attM = t.value; return; }
   if (id === 'meSel') { me = t.value; try { localStorage.setItem(LK + '-me', me); } catch (e) {} UI.cfT = me; UI.room = ''; tab = tab === 'classes' ? 'classes' : 'home'; UI.fCls = ''; UI.attCls = ''; UI.rCls = ''; UI.cfCls = ''; UI.pStu = []; renderMeta(); render(); return; }
   const map = {fCat: 'fCat', fCls: 'fCls', fSid: 'sid', rSid: 'rSid', rCat: 'rCat', rCls: 'rCls', attCat: 'attCat', attCls: 'attCls', attDate: 'attDate', cfDate: 'cfDate', cfPer: 'cfPer', cfT: 'cfT'};
   if (map[id]) { UI[map[id]] = t.value; render(); return; }
