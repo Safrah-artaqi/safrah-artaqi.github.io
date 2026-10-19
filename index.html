@@ -617,6 +617,20 @@ table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.s
 .schbar{background:#f2faf9;border-color:#bfe0e2}
 .roomsbtn.sch{border-inline-start-color:#c98a14;min-height:0;padding:16px 22px}.roomsbtn.sch .ri{width:60px;height:60px;font-size:30px;background:#c98a14}.roomsbtn.sch b{font-size:21px}
 .sc2 .tn{color:var(--ink);font-weight:700}
+/* notifications bell */
+.bellw{position:relative;flex:none}
+.bellb{position:relative;width:42px;height:42px;border:1px solid var(--line2);border-radius:11px;background:#fff;cursor:pointer;display:grid;place-items:center;font-size:20px;padding:0}
+.bellb:hover,.bellb.on{background:var(--teal-l);border-color:var(--teal)}
+.bellb.has .bi{display:inline-block;transform-origin:top center;animation:bell 2.4s ease-in-out infinite}
+.bcount{position:absolute;top:-6px;inset-inline-end:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#d64545;color:#fff;font:800 11.5px/20px var(--fh);text-align:center;box-shadow:0 0 0 2px #fff}
+.bcount[hidden]{display:none}
+.npanel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:min(92vw,460px);max-height:70vh;overflow:auto;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(16,24,40,.18)}
+.npanel[hidden]{display:none}
+.npanel .alerts{margin:0;border:0;box-shadow:none;border-radius:14px}
+@media (max-width:600px){.npanel{position:fixed;top:70px;inset-inline:8px;width:auto}}
+@media (prefers-reduced-motion:reduce){.bellb .bi{animation:none!important}}
+@media (max-width:600px){.bellw{position:static}.npanel{position:absolute;top:calc(100% + 6px);left:0;right:0;inset-inline:0;width:auto;max-height:65vh}}
+@media (max-width:600px){.navbar .menuw{order:0}.navbar .curT{order:1}.navbar .bellw{order:2;margin-inline-start:auto}.navbar .meta{order:3}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -633,6 +647,8 @@ table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.s
       <nav class="menu" role="tablist" id="tabs" hidden></nav></div>
     <div class="curT" id="curT"></div>
     <div class="meta" id="meta"></div>
+    <div class="bellw"><button class="bellb" id="bellB" type="button" aria-label="التنبيهات" aria-expanded="false" aria-controls="bellP"><span class="bi">🔔</span><span class="bcount" id="bellN" hidden></span></button>
+      <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
   <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span></div>
@@ -1017,10 +1033,13 @@ function render() {
   if (!ready) { v.innerHTML = '<div class="loading">⏳ جارٍ تحميل البيانات…</div>'; return; }
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
   const f = {sched: vSched, post: vPost, guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
-  setTimeout(countUp, 0);
+  setTimeout(countUp, 0); setTimeout(renderBell, 0);
   v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + f(); renderSum(); if (tab === 'print') fillFrame();
 }
 function countUp() { if (countUp.done || !document.querySelector('.hs b[data-count]')) return; countUp.done = 1; document.querySelectorAll('.hs b[data-count]').forEach(b => { const n = +b.dataset.count; if (!n || b.dataset.done) return; b.dataset.done = 1; const t0 = performance.now(); const f = t => { const k = Math.min(1, (t - t0) / 900); b.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); }
+function bell(open) { const p = $('#bellP'), b = $('#bellB'); if (!p) return; p.hidden = !open; b.setAttribute('aria-expanded', String(!!open)); b.classList.toggle('on', !!open); if (open) p.innerHTML = alertsCard(); }
+function renderBell() { const n = $('#bellN'), b = $('#bellB'); if (!n || !ready || !unlocked) return; const A = alertsOf(), c = A.todo.length + A.absent.length + A.nofol.length + A.nocf.length;
+  n.hidden = !c; n.textContent = c > 99 ? '99+' : c; b.classList.toggle('has', !!c); if (!$('#bellP').hidden) $('#bellP').innerHTML = alertsCard(); }
 function menu(open) { const m = $('#tabs'), bt = $('#burger'); if (!m) return; m.hidden = !open; bt.setAttribute('aria-expanded', String(!!open)); bt.classList.toggle('on', !!open); }
 function renderMeta() {
   const n = STU().length;
@@ -1072,7 +1091,6 @@ function vHome() {
   return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
   <button class="roomsbtn" data-t="classes" type="button"><span class="ri">🏫</span><span class="rt2"><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف · ${cls.reduce((a, c) => a + ALL().filter(s => s.cls === c).length, 0)} طالبًا</small></span><span class="rcl">${cls.slice(0, 6).map(c => `<span class="pill">${esc(c)}</span>`).join('')}${cls.length > 6 ? '<span class="pill">…</span>' : ''}</span><span class="go">دخول ←</span></button>
   <button class="roomsbtn sch" data-t="sched" type="button"><span class="ri">📅</span><span class="rt2"><b>جدول حصص الدعم والفسحة</b><small>${meT() ? 'حصص ' + esc(meT().name) + ': ' + SCHED().filter(h => h.tid === me).map(h => DAYN[h.day] + ' (' + PERW[h.per] + ')').join('، ') : SCHED().length + ' حصص أسبوعيًّا + فسحة الأحد والاثنين'} · التحضير والحضور الشهري</small></span><span class="go">فتح ←</span></button>
-  ${alertsCard()}
   <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
   <div class="hstats">
    <div class="hs k1"><span class="hi">🧑‍🎓</span><b data-count="${P.n}">${P.n}</b><span>طلاب البرنامج</span><small>${P.cats.map((n, i) => `${CATS[i + 1]} ${n}`).join(' · ')}</small></div>
@@ -1590,17 +1608,21 @@ function alertsOf() {
   const ses = Object.values(S.att).filter(d => d.type === 'ses').sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const absent = st.filter(s => { const m = ses.filter(d => d.marks && d.marks[s.id]).slice(0, 2).map(d => d.marks[s.id]); return m.length === 2 && m.every(x => x === 'A'); });
   const ago = d => (new Date(T) - new Date(d)) / 864e5;
-  const nofol = started ? st.filter(s => { const e = entriesOf(s.id).map(x => x.date).filter(Boolean).sort().pop(); return !e || ago(e) > 14; }) : [];
+  const base = S.cfg.start || T;
+  const nofol = started ? st.filter(s => { const e = entriesOf(s.id).map(x => x.date).filter(Boolean).sort().pop(); return e ? ago(e) > 14 : ago(base) > 14; }) : [];
   const cls = [...new Set(st.map(s => s.cls))].sort((a, b) => (ORD.indexOf(a) + 1 || 99) - (ORD.indexOf(b) + 1 || 99));
-  const nocf = started ? cls.filter(c => { const d = Object.values(S.cf).filter(x => x.cls === c).map(x => x.date).sort().pop(); return !d || ago(d) > 21; }) : [];
-  return {absent, nofol, nocf, started};
+  const nocf = started ? cls.filter(c => { const d = Object.values(S.cf).filter(x => x.cls === c).map(x => x.date).sort().pop(); return d ? ago(d) > 21 : ago(base) > 21; }) : [];
+  const wd = new Date(T + 'T12:00:00').getDay(), live = !S.cfg.start || T >= S.cfg.start;
+  const todo = live ? [...SCHED().filter(h => h.day === wd && (!meT() || h.tid === me)).map(h => ({k: 'ses|' + T + '|' + h.id, t: `حصة ${PERW[h.per]} – ${h.cls}`, by: h.tid, ids: sesStu(h).map(x => x.id), type: 'ses'})),
+    ...BRK().filter(b => b.day === wd && (!meT() || b.tid === me)).map(b => ({k: 'brk|' + T + '|' + b.id, t: `فسحة ${DAYN[b.day]} (${b.day === 0 ? 'الابتدائي' : 'الإعدادي'})`, by: b.tid, ids: b.sids, type: 'brk'}))].filter(x => x.ids.length && !attState(x.type, T, x.ids).done) : [];
+  return {absent, nofol, nocf, todo, started};
 }
 function alertsCard() {
-  const A = alertsOf(), n = A.absent.length + A.nofol.length + A.nocf.length;
+  const A = alertsOf(), n = A.todo.length + A.absent.length + A.nofol.length + A.nocf.length;
   const stuBtns = l => l.slice(0, 8).map(s => `<button class="achip" data-open="${s.id}" data-room2="1" type="button">${esc(s.name.split(' ').slice(0, 3).join(' '))} <small>${esc(s.cls)}</small></button>`).join('') + (l.length > 8 ? `<span class="mini2">+${l.length - 8}</span>` : '');
   const grp = (ic, t, d, body) => `<div class="agrp"><div class="ah"><span>${ic}</span><b>${t}</b><small>${d}</small></div><div class="alist">${body}</div></div>`;
   return `<div class="alerts${n ? '' : ' ok'}"><div class="ach2"><span class="bell">🔔</span><b>تنبيهات</b>${n ? `<span class="acount">${n}</span>` : ''}<small>${meT() ? 'لصفوف ' + esc(meT().name) : 'لجميع الصفوف'}</small></div>
-  ${n ? (A.absent.length ? grp('🚫', `غياب حصتين متتاليتين (${A.absent.length})`, 'آخر حصتين في البرنامج', stuBtns(A.absent)) : '')
+  ${n ? (A.todo.length ? grp('🗓️', `تحضير اليوم لم يُسجَّل (${A.todo.length})`, DAYN[new Date(today() + 'T12:00:00').getDay()] + ' ' + today(), A.todo.map(x => `<button class="achip" data-schatt="${x.k}" type="button">${esc(x.t)} <small>${esc(tName(x.by))}</small></button>`).join('')) : '') + (A.absent.length ? grp('🚫', `غياب حصتين متتاليتين (${A.absent.length})`, 'آخر حصتين في البرنامج', stuBtns(A.absent)) : '')
     + (A.nofol.length ? grp('⏳', `بلا متابعة منذ أسبوعين (${A.nofol.length})`, 'لم تُسجَّل لهم متابعة خطة فردية أو فئة', stuBtns(A.nofol)) : '')
     + (A.nocf.length ? grp('🏫', `صفوف بلا متابعة صفية (${A.nocf.length})`, 'آخر ٣ أسابيع', A.nocf.map(c => `<button class="achip" data-room="${esc(c)}" type="button">${esc(clsName(c))}</button>`).join('')) : '')
   : `<div class="aok">✓ لا توجد تنبيهات${A.started ? '' : ' — تبدأ التنبيهات بعد بدء التسجيل أو تحديد «بداية الخطة» في الإعدادات'}</div>`}</div>`;
@@ -1650,7 +1672,7 @@ const GUIDE = [
   ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.', 'زر «📄 تقارير أولياء الأمور» يُنزّل تقارير أولياء الأمور (عربي / English) لكل طلاب القائمة أو الفئة أو الصف في ملف PDF واحد.']],
   ['📝', 'الاختبار البعدي', ['من داخل الصف اضغط خانة «الاختبار البعدي»، وأدخل درجات كل طالب في الكفايات الخمس (الرقم الباهت في الخانة هو درجته في القبلي)، ثم اضغط «حفظ درجات البعدي».', 'يظهر التحسّن تلقائيًّا في تقرير الطالب وتقرير الصف والفئة وتقرير وليّ الأمر وإحصائيات الصفحة الرئيسية، مع عدد من انتقلوا إلى فئة أعلى. تبقى خطة الطالب مبنية على القبلي.']],
   ['👪', 'تقرير وليّ الأمر', ['في «التقارير» ← «تقرير طالب» اضغط «تقرير وليّ الأمر (عربي / English)»، فيظهر تقرير مختصر باللغتين: الحضور، والأنشطة المنجزة، ومستوى المهارات، ونقاط القوة وما يحتاج إلى دعم، ونصائح للبيت، وتوصيات المعلم.', 'اضغط «تنزيل التقرير PDF» أو «طباعة» لإرساله إلى وليّ الأمر.']],
-  ['🔔', 'التنبيهات', ['في الصفحة الرئيسية مربع «تنبيهات» يُظهر: الطلاب الذين غابوا آخر حصتين، والطلاب الذين لم تُسجَّل لهم متابعة منذ أسبوعين، والصفوف التي لم تُسجَّل لها متابعة صفية منذ ثلاثة أسابيع.', 'اضغط اسم الطالب لفتح خطته مباشرة، أو اسم الصف للدخول إليه. عند اختيار اسم المعلم تظهر تنبيهات صفوفه فقط.']],
+  ['🔔', 'التنبيهات', ['اضغط الجرس 🔔 في أعلى الصفحة (بجانب الشريط العلوي)؛ يظهر عليه عدد التنبيهات باللون الأحمر.', 'تظهر: حصص وفسحات اليوم التي لم تُحضَّر بعد، والطلاب الذين غابوا آخر حصتين، والطلاب بلا متابعة منذ أسبوعين، والصفوف بلا متابعة صفية منذ ثلاثة أسابيع.', 'اضغط الحصة لفتح التحضير مباشرة، أو اسم الطالب لفتح خطته، أو اسم الصف للدخول إليه. عند اختيار اسم المعلم تظهر تنبيهات صفوفه وحصصه فقط.']],
   ['🧑‍🎓', 'الطلاب', ['أضف طالبًا بكتابة اسمه وصفه ودرجاته في الاختبار القبلي؛ تُحسب فئته تلقائيًّا. يمكن تعديل بيانات الطالب أو حذفه.']],
   ['⚙️', 'الإعدادات', ['🎨 إعدادات الصفحة: اللون الرئيسي، خلفية الصفحة، حجم الخط، شكل الحواف، المسافات، إظهار الترويسة.', '🔑 كلمة المرور والنسخ الاحتياطي: تغيير كلمة المرور وتنزيل نسخة احتياطية أو استعادتها.', '🔗 الربط مع GitHub: لحفظ البيانات ومشاركتها بين المعلمين.', '👨‍🏫 المعلمون والصفوف، 📋 الأهداف والقوائم المنسدلة، 🏫 البيانات العامة.']],
   ['⭐', 'معاني الرموز', ['مستوى البدء في كل كفاية: ★ أساسي (أقل من ٦٠٪) · ★★ متوسط (٦٠–٧٩٪) · ★★★ متقدم (٨٠٪ فأكثر).', 'الفئات: الأولى متميز (٩٠٪ فأكثر) · الثانية متقن (٨٠–٨٩٪) · الثالثة مجتاز يحتاج تعزيزًا (٦٠–٧٩٪) · الرابعة غير مجتاز (أقل من ٦٠٪).', 'فترات الخطة: الأولى الأسابيع ٣–٥ · الثانية ٦–٨ · الثالثة ٩–١١ · الرابعة ١٢–١٤.']],
@@ -1674,8 +1696,10 @@ function collectEntry(pref) {
 }
 document.addEventListener('click', async ev => {
   if (!ev.target.closest('.menuw')) menu(false);
+  if (!ev.target.closest('.bellw') || ev.target.closest('.npanel .achip')) bell(false);
   const b = ev.target.closest('button, [data-open]'); if (!b) return;
   if (b.id === 'burger') { menu($('#tabs').hidden); return; }
+  if (b.id === 'bellB') { bell($('#bellP').hidden); return; }
   if (b.id === 'pwGo') { if (await checkPw($('#pwIn').value)) { unlocked = true; render(); } else { $('#pwMsg').textContent = 'كلمة المرور غير صحيحة'; } return; }
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'classes'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
@@ -1807,7 +1831,7 @@ async function restoreBackup() { const d = UI.bk; if (!d) return; try {
       $('#bkMsg').textContent = 'جارٍ الاستعادة…';
       for (const c of COLLS) { for (const k of Object.keys(S[c])) if (!(d[c] || {})[k]) await del(c, k); for (const [k, v] of Object.entries(d[c] || {})) await put(c, k, v); }
       await put('cfg', 'main', fixCfg(Object.assign(defCfg(), d.cfg || {}))); UI.bk = null; toast('✓ تمت الاستعادة'); render(); } catch (e) { toast('تعذّرت الاستعادة'); } }
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape') menu(false); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { menu(false); bell(false); } });
 document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'pwIn') $('#pwGo').click(); });
 document.addEventListener('toggle', ev => { const d = ev.target; if (d.matches && d.matches('details[data-ms="pStu"]') && !d.open) { const v = mselVal('pStu'); if (v.join() !== UI.pStu.join()) { UI.pStu = v; [...UI.pPick.keys()].forEach(x => { if (!v.includes(x.split('|')[0])) UI.pPick.delete(x); }); setTimeout(render, 0); } } if (d.matches && d.matches('details.msel') && d.open) $$('details.msel[open]').forEach(x => { if (x !== d) x.open = false; }); }, true);
 boot();
