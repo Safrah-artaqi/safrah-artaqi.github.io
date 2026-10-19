@@ -585,6 +585,9 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .gst{flex:none;font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;background:#f1f4f7;color:var(--muted);white-space:nowrap}
 .gst.full{background:#e8f5ee;color:#1d6b44}.gst.part{background:#fdf5df;color:#8a5a00}.gst.none{background:#fcecec;color:#a33}
 .gcomp{display:inline-block;background:var(--teal-l);color:var(--teal-d);border-radius:999px;padding:0 8px;font-size:11.5px;font-weight:800;margin-inline-end:4px}
+.gr .gg{font-size:12.5px;margin-top:3px;color:var(--ink)}.gr .gg b{color:var(--teal-d)}
+.gr.ro{background:#fafcfc}
+.gdone{margin-top:8px}.gdone>summary{cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;padding:4px 2px}.gdone .gbl{margin-top:6px}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -690,8 +693,8 @@ const defCfg = () => ({lists: JSON.parse(JSON.stringify(DEF_LISTS)), teachers: J
   pw: null, year: '2026 – 2027', school: 'مدرسة سافرة الابتدائية الإعدادية للبنين', principal: 'أ. حمود أحمد علي', coord: 'أ. عمار حسين سند'});
 
 /* ---------- state & storage ---------- */
-const S = {cfg: defCfg(), students: {}, logs: {}, glogs: {}, att: {}, cf: {}, rn: {}};
-const COLLS = ['students', 'logs', 'glogs', 'att', 'cf', 'rn'];
+const S = {cfg: defCfg(), students: {}, logs: {}, glogs: {}, att: {}, cf: {}, rn: {}, pr: {}};
+const COLLS = ['students', 'logs', 'glogs', 'att', 'cf', 'rn', 'pr'];
 const LK = 'arteqi-tracker-v1';
 let mode = 'boot', db = null, dl = null, ready = false, unlocked = false, tab = 'home';
 let me = ''; try { me = localStorage.getItem(LK + '-me') || ''; } catch (e) {}
@@ -900,6 +903,31 @@ function renderGBox(pref) { const box = $('#' + pref + 'GBox'); if (!box) return
     return `<div class="gr" data-g="${esc(g)}"><div class="gt"><span class="gcomp">${ICON[G.c] || ''} ${COMP[G.c] || ''}</span> <b>${esc(G.t || g)}</b> ${G.d ? '<small>' + STARS[G.d] + '</small>' : ''}<div class="gs">مرتبط بالنشاط: ${ks.map(k => `<span class="pill a">${esc(actLabel(k))}</span>`).join('')}</div></div>
     <div class="gach">${GACH.map(([k, t]) => `<label class="${k}"><input type="radio" name="ga_${pref}_${esc(g)}" value="${k}"${v === k ? ' checked' : ''}>${t}</label>`).join('')}</div></div>`; }).join('')
     : '<div class="mini2">اختر الأنشطة التي أُعطيت أولًا، فتظهر هنا أهداف الخطة المرتبطة بها لتحدّد مدى تحقّق كلٍّ منها.</div>'; }
+const printedOf = sid => ((S.pr[sid] || {}).items || []);
+async function recordPrints() { const items = printItems().filter(x => !UI.pSel || UI.pSel.has(x.key));
+  if (!(UI.pMode === 'stu' || (UI.pMode === 'date' && UI.pPer === 'stu'))) return 0; const by = {};
+  items.forEach(x => x.sids.forEach(sid => { (by[sid] = by[sid] || []).push(x.key); }));
+  const d = UI.pMode === 'date' ? UI.pDate : today(); let n = 0;
+  for (const [sid, keys] of Object.entries(by)) { const cur = printedOf(sid).slice(); keys.forEach(k => { const i = cur.findIndex(y => y.key === k); const it = {key: k, date: d, ts: Date.now(), tid: me || ''}; if (i >= 0) cur[i] = it; else cur.push(it); n++; }); await put('pr', sid, {items: cur}); }
+  return n; }
+function lastAch(sid, key) { let r = ''; entriesOf(sid).forEach(e => { if ((e.acts || []).includes(key)) r = (e.aach && e.aach[key]) || e.ach || 'part'; }); return r; }
+function prBox(pref, studs) {
+  const m = new Map(); studs.forEach(s => printedOf(s.id).forEach(it => { if (!m.has(it.key)) m.set(it.key, {key: it.key, date: it.date, sids: []}); const o = m.get(it.key); o.sids.push(s.id); if (it.date > o.date) o.date = it.date; }));
+  const all = [...m.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const pend = all.filter(x => x.sids.some(id => !givenSet(id).has(x.key))), done = all.filter(x => !pend.includes(x));
+  const row = (x, ro) => { const a = actOf(x.key) || {}, gs = goalsOfAct(x.key).map(goalOf).filter(Boolean);
+    const st = ro ? lastAch(x.sids[0], x.key) : '';
+    return `<div class="gr${ro ? ' ro' : ''}" data-k="${esc(x.key)}"><div class="gt"><span class="gcomp">${ICON[a.c] || ''} ${COMP[a.c] || ''}</span> <b>${esc(actLabel(x.key))}</b> ${esc(a.t || '')}
+      <div class="gs">🖨️ طُبع ${esc(x.date || '')}${studs.length > 1 ? ' · لـ ' + x.sids.length + ' طلاب: ' + x.sids.map(id => esc((S.students[id] || {}).name || '').split(' ').slice(0, 2).join(' ')).join('، ') : ''}</div>
+      <div class="gg">🎯 الهدف: ${gs.map(g => `<b>${esc(g.t)}</b> <small>${STARS[g.d] || ''}</small>`).join(' · ') || '—'}</div></div>
+      ${ro ? `<div class="gach">${st ? gStat(st) : ''}</div>` : `<div class="gach">${GACH.map(([k, t]) => `<label class="${k}"><input type="radio" name="pa_${pref}_${esc(x.key)}" value="${k}">${t}</label>`).join('')}</div>`}</div>`; };
+  return `<div class="wide gbox" id="${pref}PBox" style="grid-column:1/-1"><div class="gbh">🖨️ الأنشطة المطبوعة ${studs.length > 1 ? 'لطلاب الفئة' : 'للطالب'} وأهدافها <small>حدّد لكل نشاط طُبّق: هل تحقّق هدفه؟ — تظهر هنا فقط الأنشطة المطبوعة من «طباعة الأنشطة»</small></div>
+  <div class="gbl">${pend.map(x => row(x, false)).join('') || `<div class="mini2">لا توجد أنشطة مطبوعة بانتظار التقييم. اطبع الأنشطة أولًا من <button class="lnk" data-t="print" type="button">🖨️ طباعة الأنشطة</button>${studs.length > 1 ? '' : ' (بحسب الطالب والفترة)'}.</div>`}</div>
+  ${done.length ? `<details class="gdone"><summary>✓ أنشطة مطبوعة قُيّمت سابقًا (${done.length})</summary><div class="gbl">${done.map(x => row(x, true)).join('')}</div></details>` : ''}</div>`;
+}
+function collectPBox(pref) { const aach = {}; $$('#' + pref + 'PBox .gr:not(.ro)').forEach(r => { const c = r.querySelector('input:checked'); if (c) aach[r.dataset.k] = c.value; });
+  const gach = {}; Object.entries(aach).forEach(([k, v]) => goalsOfAct(k).forEach(g => { if (!gach[g] || ARANK[v] > ARANK[gach[g]]) gach[g] = v; }));
+  return {acts: Object.keys(aach), aach, goals: Object.keys(gach), gach}; }
 const gboxHtml = pref => `<div class="wide gbox" id="${pref}GBox" style="grid-column:1/-1"><div class="gbh">🎯 الأهداف المرتبطة بالأنشطة المختارة <small>تُربط تلقائيًّا بحسب كفاية النشاط ومهارته — حدّد مدى تحقّق كل هدف</small></div><div class="gbl"><div class="mini2">اختر الأنشطة التي أُعطيت أولًا، فتظهر هنا أهداف الخطة المرتبطة بها لتحدّد مدى تحقّق كلٍّ منها.</div></div></div>`;
 function goalGroups(s) {
   const order = s ? [...weak(s), ...KEYS.filter(k => !weak(s).includes(k)), 'G'] : [...KEYS, 'G'];
@@ -1041,9 +1069,7 @@ function entryForm(pref, s, book, bank, given, extra) {
   <label>المعلم المتابع${tSelect(pref + 'T', me)}</label>
   <label>مدى التحقّق<select id="${pref}Ach"><option value="">—</option>${Object.entries(ACH).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
   <label>درجة الأداء (من ١٠)<input type="number" id="${pref}Score" min="0" max="10" step="0.5"></label>
-  <label class="wide">الأنشطة التي أُعطيت ${msel(pref + 'Acts', [...actGroups(book, s, given), ...(bank ? actGroups(bank, s, given).map(g => Object.assign(g, {label: g.label + ' (' + BOOKN[bank] + ')'})) : [])], [], 'اختر نشاطًا أو أكثر من ' + BOOKN[book])}</label>
-  ${gboxHtml(pref)}
-  <label class="wide">أهداف إضافية (اختياري) ${msel(pref + 'Goals', goalGroups(s), [], 'اختر هدفًا آخر من القائمة')}</label>
+  ${prBox(pref, [s])}
   ${extra || ''}
   ${notesBlock(pref)}
   <div><button class="btn" type="button" id="${pref}Save">💾 حفظ المتابعة</button></div></div>`;
@@ -1091,9 +1117,7 @@ function vGrp() {
   <label>التاريخ<input type="date" id="gDate" value="${today()}"></label><label>المعلم المتابع${tSelect('gT', me)}</label>
   <label>مدى التحقّق<select id="gAch"><option value="">—</option>${Object.entries(ACH).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
   ${studChecks}
-  <label class="wide">الأنشطة التي أُعطيت ${msel('gActs', actG, [], 'اختر نشاطًا أو أكثر')}</label>
-  ${gboxHtml('g')}
-  <label class="wide">أهداف إضافية (اختياري) ${msel('gGoals', goalGroups(null), [], 'اختر هدفًا آخر')}</label>
+  ${prBox('g', list)}
   ${notesBlock('g')}<div><button class="btn" type="button" id="gSave">💾 حفظ متابعة الفئة</button></div></div></div></div>
   <h2 class="sec">📈 تقدّم طلاب الفئة</h2><div class="tw"><table><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>القبلي</th><th>مستوى البدء (L S W R T)</th><th>الأنشطة</th><th>أهداف متحقّقة</th><th>المتابعات</th><th>آخر متابعة</th><th>حضور الحصة</th></tr></thead><tbody>${prog || '<tr><td colspan="9" class="empty">لا يوجد طلاب في هذه الفئة.</td></tr>'}</tbody></table></div>
   <h2 class="sec">🗂️ سجل متابعة خطة الفئة</h2>${logTable(Object.values(S.glogs).filter(g => +g.cat === c).sort((a, b) => (b.date || '').localeCompare(a.date || '')), true)}`;
@@ -1519,9 +1543,9 @@ const GUIDE = [
   ['☰', 'القائمة العلوية', ['زر المربّع ذي الخطوط الثلاث في زاوية الشريط العلوي يفتح القائمة: الصفحة الرئيسية، دليل الاستخدام، الإعدادات.', 'يُظهر الشريط العلوي مسار مكانك: 🏠 ← الصف ← القسم، وتستطيع الضغط على أيّ جزء منه للرجوع.']],
   ['👨‍🏫', 'اختيار المعلم والصفوف', ['اختر اسمك من «المعلم المتابع» في الشريط العلوي، فتظهر في الصفحة الرئيسية صفوفك فقط، كل صف في مستطيل يبيّن عدد طلابه وفئاتهم ونسبة الإنجاز والحضور.', 'اختيار «الكل (المنسق)» يُظهر جميع الصفوف.', 'اضغط على مستطيل الصف للدخول إليه.']],
   ['🏫', 'داخل الصف', ['تظهر خانات الصف: الخطط الفردية، خطط الفئات، طباعة الأنشطة، الحضور، المتابعة الصفية، التقارير، الطلاب.', 'كل خانة تعمل على طلاب هذا الصف فقط، وتظهر فيها فئات الصف الموجودة فقط.']],
-  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، مدى التحقّق، الدرجة، ثم اختر «الأنشطة التي أُعطيت»؛ فتظهر تلقائيًّا «الأهداف المرتبطة» بكفاية كل نشاط ومهارته، وحدّد لكل هدف: تحقّق / جزئيًّا / لم يتحقّق. ثم اختر الملاحظات والإجراءات والمقترحات واضغط «حفظ المتابعة».', 'قسم «🎯 أهداف الخطة الفردية» يعرض أهداف كل كفاية من مستوى بدء الطالب وحالة كل هدف، ويتحدّث تلقائيًّا من الخطة الفردية وخطط الفئات معًا، ويظهر عدد الأهداف المتحقّقة لكل كفاية في جدول الخطة والتقارير', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
-  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'اختر الأنشطة التي أُعطيت فتظهر أهدافها المرتبطة، وحدّد مدى تحقّق كل هدف، ثم اضغط «حفظ متابعة الفئة»؛ تُضاف الأنشطة والأهداف المتحقّقة إلى الخطة الفردية لكل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
-  ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.']],
+  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، والمعلم، ومدى التحقّق، والدرجة. يظهر مربع «🖨️ الأنشطة المطبوعة للطالب وأهدافها»: كل نشاط طُبع للطالب من «طباعة الأنشطة» وبجانبه الهدف الذي يحققه؛ حدّد لكل نشاط طُبّق: تحقّق / جزئيًّا / لم يتحقّق. ثم اختر الملاحظات والإجراءات والمقترحات واضغط «حفظ المتابعة».', 'بعد التقييم ينتقل النشاط إلى «أنشطة مطبوعة قُيّمت سابقًا»، ويُحتسب هدفه في قسم «🎯 أهداف الخطة الفردية» الذي يعرض أهداف كل كفاية وحالتها، ويتحدّث من الخطة الفردية وخطط الفئات معًا', 'قسم «🎯 أهداف الخطة الفردية» يعرض أهداف كل كفاية من مستوى بدء الطالب وحالة كل هدف، ويتحدّث تلقائيًّا من الخطة الفردية وخطط الفئات معًا، ويظهر عدد الأهداف المتحقّقة لكل كفاية في جدول الخطة والتقارير', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
+  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'يظهر مربع «الأنشطة المطبوعة لطلاب الفئة»: كل نشاط طُبع لطلاب الفئة وأسماؤهم والهدف الذي يحققه؛ حدّد مدى تحقّقه واضغط «حفظ متابعة الفئة»؛ يُحتسب الهدف في الخطة الفردية لكل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
+  ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. عند الطباعة أو التنزيل تُسجَّل الأنشطة المطبوعة في خطة كل طالب لتقييم أهدافها لاحقًا. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.']],
   ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.', 'للتقرير الشهري: اختر «الشهر» ثم اضغط «📄 الحضور والغياب الشهري PDF»؛ يظهر لكل طالب حضوره في الحصص والفسحات خلال الشهر والمجاميع والنسبة.']],
   ['🏫', 'المتابعة الصفية', ['اختر التاريخ وفترة المتابعة، ثم قيّم كل طالب في المؤشرات (١–٤) وحدّد الدعم المقدَّم والتقدّم وملاحظات معلم الفصل.', 'في الأسفل: ملاحظات عامة، ثم التوصيات، ثم إجراءات معلم البرنامج، واضغط «حفظ المتابعة الصفية».']],
   ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.', 'زر «📄 تقارير أولياء الأمور» يُنزّل تقارير أولياء الأمور (عربي / English) لكل طلاب القائمة أو الفئة أو الصف في ملف PDF واحد.']],
@@ -1547,7 +1571,7 @@ async function saveFile(name, data, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: type || 'application/octet-stream'})); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); return true;
 }
 function collectEntry(pref) {
-  return {id: uid(), ts: Date.now(), date: $('#' + pref + 'Date').value || today(), tid: $('#' + pref + 'T').value, goals: [...new Set([...$$('#' + pref + 'GBox .gr').map(r => r.dataset.g), ...mselVal(pref + 'Goals')])], gach: Object.fromEntries($$('#' + pref + 'GBox .gr').map(r => [r.dataset.g, (r.querySelector('input:checked') || {}).value || 'full'])), acts: mselVal(pref + 'Acts'), ach: $('#' + pref + 'Ach').value, score: $('#' + pref + 'Score') ? ($('#' + pref + 'Score').value === '' ? null : +$('#' + pref + 'Score').value) : null, note: $('#' + pref + 'Note').value.trim(), nSel: mselVal(pref + 'N'), pSel: mselVal(pref + 'P'), rSel: mselVal(pref + 'R')};
+  return {id: uid(), ts: Date.now(), date: $('#' + pref + 'Date').value || today(), tid: $('#' + pref + 'T').value, ...collectPBox(pref), ach: $('#' + pref + 'Ach').value, score: $('#' + pref + 'Score') ? ($('#' + pref + 'Score').value === '' ? null : +$('#' + pref + 'Score').value) : null, note: $('#' + pref + 'Note').value.trim(), nSel: mselVal(pref + 'N'), pSel: mselVal(pref + 'P'), rSel: mselVal(pref + 'R')};
 }
 document.addEventListener('click', async ev => {
   if (!ev.target.closest('.menuw')) menu(false);
@@ -1591,8 +1615,8 @@ document.addEventListener('click', async ev => {
   }
   if (/^gh(Save|PullB|PushB|Forget)$/.test(b.id)) { await ghClick(b.id); return; }
   switch (b.id) {
-    case 'iSave': { const s = S.students[UI.sid]; if (!s) return; const e = collectEntry('i'); if (!e.tid) return toast('اختر المعلم المتابع'); if (!e.acts.length && !e.goals.length && !noteTxt(e)) return toast('اختر الأهداف أو الأنشطة أولًا'); const L = S.logs[s.id] || {e: []}; await put('logs', s.id, {e: [...(L.e || []), e]}); toast('✓ حُفظت متابعة ' + s.name); render(); break; }
-    case 'gSave': { const e = collectEntry('g'); e.cat = +UI.cat; e.sids = mselVal('gStud'); if (!e.tid) return toast('اختر المعلم المتابع'); if (!e.sids.length) return toast('اختر الطلاب المشاركين'); if (!e.acts.length && !e.goals.length) return toast('اختر الأهداف أو الأنشطة'); await put('glogs', e.id, e); toast('✓ حُفظت متابعة الفئة لـ ' + e.sids.length + ' طلاب'); render(); break; }
+    case 'iSave': { const s = S.students[UI.sid]; if (!s) return; const e = collectEntry('i'); if (!e.tid) return toast('اختر المعلم المتابع'); if (!e.acts.length && !noteTxt(e)) return toast('حدّد مدى تحقّق نشاط مطبوع واحد على الأقل، أو اكتب ملاحظة'); const L = S.logs[s.id] || {e: []}; await put('logs', s.id, {e: [...(L.e || []), e]}); toast('✓ حُفظت متابعة ' + s.name); render(); break; }
+    case 'gSave': { const e = collectEntry('g'); e.cat = +UI.cat; e.sids = mselVal('gStud'); if (!e.tid) return toast('اختر المعلم المتابع'); if (!e.sids.length) return toast('اختر الطلاب المشاركين'); if (!e.acts.length) return toast('حدّد مدى تحقّق نشاط مطبوع واحد على الأقل'); await put('glogs', e.id, e); toast('✓ حُفظت متابعة الفئة لـ ' + e.sids.length + ' طلاب'); render(); break; }
     case 'cfSave': { const id = (UI.cfCls + '_' + UI.cfDate + '_' + UI.cfPer).replace(/\//g, '-'); const rows = {};
       $$('table.cf tr[data-sid]').forEach(tr => { const r = {ind: IND.map((_, i) => { const v = tr.querySelector(`[data-ind="${i}"]`).value; return v ? +v : null; }), sup: [...tr.querySelectorAll('[data-sup]:checked')].map(x => +x.dataset.sup), prog: tr.querySelector('[data-prog]').value, note: tr.querySelector('[data-note]').value.trim(), nsel: mselVal('cn_' + tr.dataset.sid)};
         if (r.ind.some(x => x) || r.sup.length || r.prog || r.note || r.nsel.length) rows[tr.dataset.sid] = r; });
@@ -1619,8 +1643,8 @@ document.addEventListener('click', async ev => {
     case 'pPickClr': UI.pAct = new Set(); render(); break;
     case 'pExClr': UI.pEx = new Set(); render(); break;
     case 'pManOk': UI.pMan = mselVal('pMan'); render(); break;
-    case 'pPrint': { const f = $('#pFrame'); try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('الطباعة غير متاحة هنا – نزّل الملف واطبعه'); } break; }
-    case 'pDl': { const d = printDoc(); await saveFile(('أنشطة_' + CATN[UI.pCat].split('–')[0].trim() + (UI.pMode === 'date' ? '_' + UI.pDate : '')).replace(/\s+/g, '_') + '.html', d.html, 'text/html'); break; }
+    case 'pPrint': { const f = $('#pFrame'); try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('الطباعة غير متاحة هنا – نزّل الملف واطبعه'); } const nrec = await recordPrints(); if (nrec) toast('🖨️ سُجّلت الأنشطة المطبوعة في خطط الطلاب'); break; }
+    case 'pDl': { const nrec = await recordPrints(); if (nrec) toast('🖨️ سُجّلت الأنشطة المطبوعة في خطط الطلاب'); const d = printDoc(); await saveFile(('أنشطة_' + CATN[UI.pCat].split('–')[0].trim() + (UI.pMode === 'date' ? '_' + UI.pDate : '')).replace(/\s+/g, '_') + '.html', d.html, 'text/html'); break; }
     case 'sCancel': UI.editSid = ''; render(); break;
     case 'seedBtn': { for (const [i, s] of D.students.entries()) await put('students', 's' + (i + 1), Object.assign({id: 's' + (i + 1)}, s)); render(); break; }
     case 'pwSave': { if (!(await checkPw($('#pwOld').value))) return toast('كلمة المرور الحالية غير صحيحة'); const n = $('#pwNew').value; if (n.length < 4) return toast('أربعة أحرف أو أرقام على الأقل'); if (n !== $('#pwNew2').value) return toast('التأكيد غير مطابق'); S.cfg.pw = await hash(n); await saveCfg(); toast('✓ غُيّرت كلمة المرور'); render(); break; }
@@ -1643,7 +1667,7 @@ document.addEventListener('input', ev => { if (ev.target.id === 'lookC') { const
 document.addEventListener('change', async ev => {
   const t = ev.target;
   if (t.closest('details.msel')) { const dm = t.closest('details.msel'); updMsel(dm); if (dm.dataset.ms === 'iActs') renderGBox('i'); if (dm.dataset.ms === 'gActs') renderGBox('g'); return; }
-  if (t.id === 'iAch' || t.id === 'gAch') { const pf = t.id[0]; $$('#' + pf + 'GBox .gr').forEach(r => { const x = r.querySelector(`input[value="${t.value || 'full'}"]`); if (x) x.checked = true; }); return; }
+  if (t.id === 'iAch' || t.id === 'gAch') { const pf = t.id[0]; $$('#' + pf + 'PBox .gr:not(.ro)').forEach(r => { const x = r.querySelector(`input[value="${t.value || 'full'}"]`); if (x) x.checked = true; }); return; }
   const id = t.id;
   if (id === 'attM') { UI.attM = t.value; return; }
   if (id === 'meSel') { me = t.value; try { localStorage.setItem(LK + '-me', me); } catch (e) {} UI.cfT = me; UI.room = ''; tab = tab === 'classes' ? 'classes' : 'home'; UI.fCls = ''; UI.attCls = ''; UI.rCls = ''; UI.cfCls = ''; UI.pStu = []; renderMeta(); render(); return; }
