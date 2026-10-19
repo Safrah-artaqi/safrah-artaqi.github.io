@@ -604,6 +604,19 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .frm details.msel[open] .mlist{max-height:420px}
 table.cf td:last-child{min-width:260px}.msel.sm .mlist{min-width:250px}
 @media (max-width:600px){.mlist label input[type=checkbox],.frm .mlist label input[type=checkbox]{width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important}.mlist label{grid-template-columns:20px minmax(0,1fr)}}
+/* activity type */
+.ty{display:inline-block;border:1px solid;border-radius:999px;padding:0 8px;font:700 11px var(--fh);cursor:pointer;background:#fff;margin-inline-start:4px;vertical-align:middle}
+.ty.in{color:#0b5560;border-color:#9fd0d3;background:#edf6f7}.ty.out{color:#9a5518;border-color:#efcfae;background:#fbf4ec}
+.tyt{font-weight:700}.tyt.in{color:#0b5560}.tyt.out{color:#9a5518}
+.ttype .seg button[data-ptype="in"][aria-pressed="true"]{color:#0b5560}.ttype .seg button[data-ptype="out"][aria-pressed="true"]{color:#9a5518}
+/* schedule */
+table.sch{table-layout:fixed;min-width:860px}table.sch th,table.sch td{text-align:center;vertical-align:top;padding:5px}
+table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.sch th.dh2 small{color:var(--muted);font-weight:600}
+.sc2{display:grid;gap:3px;justify-items:center;background:#f2faf9;border:1px solid #bfe0e2;border-radius:10px;padding:6px 4px}
+.sc2 b{font-family:var(--fh);font-size:15px;color:var(--teal-d)}.sc2 small{color:var(--muted);font-size:11.5px}.sc2 .btn{padding:2px 8px;font-size:11.5px}
+.schbar{background:#f2faf9;border-color:#bfe0e2}
+.roomsbtn.sch{border-inline-start-color:#c98a14;min-height:0;padding:16px 22px}.roomsbtn.sch .ri{width:60px;height:60px;font-size:30px;background:#c98a14}.roomsbtn.sch b{font-size:21px}
+.sc2 .tn{color:var(--ink);font-weight:700}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -663,6 +676,10 @@ const GR = {'1ع': 'الأول الإعدادي', '2ع': 'الثاني الإع�
 const clsName = c => { const [g, n] = String(c).split('/'); return (GR[g] || g) + (n ? ' / ' + n : ''); };
 const halqaOf = c => /ع/.test(c) ? 'الثالثة' : 'الثانية';
 
+// weekly support sessions — from the official timetable (first term 2026–2027): day 0=Sunday … 4=Thursday, per = period 1–7
+const DEF_SCHED = [{id: 'h1', tid: 't1', day: 0, per: 3, cls: '2ع/2'}, {id: 'h2', tid: 't3', day: 0, per: 6, cls: '4ب/2'}, {id: 'h3', tid: 't2', day: 0, per: 7, cls: '3ع/1'},
+  {id: 'h4', tid: 't2', day: 1, per: 2, cls: '3ع/2'}, {id: 'h5', tid: 't3', day: 1, per: 4, cls: '4ب/1'}, {id: 'h6', tid: 't3', day: 2, per: 6, cls: '5ب/1'},
+  {id: 'h7', tid: 't3', day: 3, per: 5, cls: '1ع/2'}, {id: 'h8', tid: 't3', day: 4, per: 5, cls: '1ع/1'}, {id: 'h9', tid: 't2', day: 4, per: 5, cls: '6ب/1'}, {id: 'h10', tid: 't1', day: 4, per: 7, cls: '2ع/1'}];
 const DEF_TEACHERS = [
   {id: 't1', name: 'أ. عمار سند', cls: ['2ع/1', '2ع/2']},
   {id: 't2', name: 'أ. خالد الحمري', cls: ['6ب/1', '3ع/1', '3ع/2']},
@@ -855,7 +872,7 @@ const tName = id => { const t = (S.cfg.teachers || []).find(t => t.id === id); r
 const teacherOfCls = c => (S.cfg.teachers || []).filter(t => (t.cls || []).includes(c));
 const myCls = () => { const t = (S.cfg.teachers || []).find(t => t.id === me); return t ? t.cls || [] : []; };
 const meT = () => (S.cfg.teachers || []).find(t => t.id === me);
-const GLOBAL_T = ['home', 'classes', 'dash', 'set', 'guide'];
+const GLOBAL_T = ['home', 'classes', 'dash', 'set', 'guide', 'sched'];
 const CATSV = () => { if (!inRoom()) return [1, 2, 3, 4]; const c = [1, 2, 3, 4].filter(k => STU().some(s => catOf(s.total) === k)); return c.length ? c : [1, 2, 3, 4]; };
 const inRoom = () => UI.room && !GLOBAL_T.includes(tab);
 const ORD = ['4ب/1', '4ب/2', '5ب/1', '6ب/1', '1ع/1', '1ع/2', '2ع/1', '2ع/2', '3ع/1', '3ع/2'];
@@ -875,6 +892,14 @@ function entriesOf(sid) {
 }
 function givenSet(sid) { const s = new Set(); entriesOf(sid).forEach(e => (e.acts || []).forEach(a => s.add(a))); return s; }
 const ARANK = {full: 3, part: 2, none: 1};
+/* ---------- weekly schedule ---------- */
+const PERW = ['', 'الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة', 'السابعة'];
+const SCHED = () => S.cfg.sched || DEF_SCHED;
+const addDays = (d, n) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+const weekSun = d => addDays(d, -new Date(d + 'T12:00:00').getDay());
+const sesStu = h => ALL().filter(s => s.cls === h.cls && (!h.cat || String(catOf(s.total)) === String(h.cat)));
+const BRK = () => S.cfg.brk || [0, 1].flatMap(day => (S.cfg.teachers || []).map(t => ({id: 'b' + day + t.id, day, tid: t.id, sids: ALL().filter(s => SCHED().some(h => h.tid === t.id && h.cls === s.cls)).map(s => s.id)})).filter(b => b.sids.length));
+function attState(type, date, sids) { const m = ((S.att[type + '_' + date] || {}).marks || {}); const d = sids.filter(id => m[id]); return {done: d.length, n: sids.length, p: d.filter(id => m[id] === 'P' || m[id] === 'L').length}; }
 function goalsDone(sid) { const m = {}; entriesOf(sid).forEach(e => (e.goals || []).forEach(g => { const a = (e.gach && e.gach[g]) || e.ach || 'part'; if (!m[g] || ARANK[a] > ARANK[m[g]]) m[g] = a; })); return m; }
 function planGoals(s) { const gd = goalsDone(s.id); return KEYS.map(k => { const lv = startLv(pctOf(s, k)); const gs = (S.cfg.goals || []).filter(g => g.c === k && ((g.d || 1) >= lv || gd[g.id])); return {k, gs: gs.map(g => ({g, a: gd[g.id] || ''}))}; }); }
 const gCount = (s, k) => { const x = planGoals(s).find(y => y.k === k); return x ? `${x.gs.filter(y => y.a === 'full').length} / ${x.gs.length}` : '—'; };
@@ -938,7 +963,7 @@ function prBox(pref, studs) {
   let ri = 0;
   const row = (x, ro) => { const a = actOf(x.key) || {}, gs = ((ro && lastLink(x.sids[0], x.key)) || goalsOfAct(x.key)).map(goalOf).filter(Boolean), idx = ri++;
     const st = ro ? lastAch(x.sids[0], x.key) : '';
-    return `<div class="gr${ro ? ' ro' : ''}" data-k="${esc(x.key)}" data-i="${idx}"><div class="gt"><span class="gcomp">${ICON[a.c] || ''} ${COMP[a.c] || ''}</span> <b>${esc(actLabel(x.key))}</b> ${esc(a.t || '')}
+    return `<div class="gr${ro ? ' ro' : ''}" data-k="${esc(x.key)}" data-i="${idx}"><div class="gt"><span class="gcomp">${ICON[a.c] || ''} ${COMP[a.c] || ''}</span> <b>${esc(actLabel(x.key))}</b> ${esc(a.t || '')} <small class="tyt ${actType(x.key)}">${ATN[actType(x.key)]}</small>
       <div class="gs">🖨️ طُبع ${esc(x.date || '')}${studs.length > 1 ? ' · لـ ' + x.sids.length + ' طلاب: ' + x.sids.map(id => esc((S.students[id] || {}).name || '').split(' ').slice(0, 2).join(' ')).join('، ') : ''}</div>
       ${ro ? `<div class="gg">🎯 الهدف: ${gs.map(g => `<b>${esc(g.t)}</b> <small>${STARS[g.d] || ''}</small>`).join(' · ') || '—'}</div>` : `<div class="glink"><span>🎯 يحقّق الهدف:</span>${msel('pg' + pref + idx, goalGroupsFor(a.c), gs.map(g => g.id), 'اختر الهدف الذي يحققه النشاط', 'gsel')}</div>`}</div>
       ${ro ? `<div class="gach">${st ? gStat(st) : ''}</div>` : `<div class="gach">${GACH.map(([k, t]) => `<label class="${k}"><input type="radio" name="pa_${pref}_${esc(x.key)}" value="${k}">${t}</label>`).join('')}</div>`}</div>`; };
@@ -976,7 +1001,7 @@ function filterBar(withStudent) {
 
 /* ---------- render shell ---------- */
 const MENU = [['home', '🏠 الصفحة الرئيسية'], ['guide', '📘 دليل الاستخدام'], ['set', '⚙️ الإعدادات']];
-const TABS = [['post', '📝 الاختبار البعدي'], ['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
+const TABS = [['sched', '📅 جدول حصص الدعم'], ['post', '📝 الاختبار البعدي'], ['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
 function render() {
   const v = $('#view'); applyLook();
   $('#tabs').innerHTML = `<div class="mh">القائمة</div>` + MENU.map(([k, n]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}"><span class="ic">${n.split(' ')[0]}</span>${n.split(' ').slice(1).join(' ')}</button>`).join('') + `<div class="mf">جميع الحقوق محفوظة © أ. خالد الحمري</div>`;
@@ -986,7 +1011,7 @@ function render() {
   renderMeta();
   if (!ready) { v.innerHTML = '<div class="loading">⏳ جارٍ تحميل البيانات…</div>'; return; }
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
-  const f = {post: vPost, guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
+  const f = {sched: vSched, post: vPost, guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
   setTimeout(countUp, 0);
   v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + f(); renderSum(); if (tab === 'print') fillFrame();
 }
@@ -1007,7 +1032,7 @@ function renderSum() {
 }
 
 /* ---------- home: classes ---------- */
-const ROOM_T = [['ind', '📋', 'الخطط الفردية', 'متابعة خطة كل طالب: الأهداف والأنشطة والملاحظات'], ['grp', '👥', 'خطط الفئات', 'متابعة جماعية لطلاب الفئة نفسها'], ['print', '🖨️', 'طباعة الأنشطة', 'أنشطة كل طالب بحسب فترته ومستواه'], ['att', '🗓️', 'الحضور', 'حصة البرنامج والفسحة'], ['cls', '🏫', 'المتابعة الصفية', 'مؤشرات الأداء داخل الفصل'], ['rep', '📄', 'التقارير', 'تقارير الطلاب وتقرير الصف (PDF)'], ['post', '📝', 'الاختبار البعدي', 'إدخال درجات البعدي ومقارنتها بالقبلي'], ['studs', '🧑‍🎓', 'الطلاب', 'إضافة الطلاب وتعديل بياناتهم']];
+const ROOM_T = [['ind', '📋', 'الخطط الفردية', 'متابعة خطة كل طالب: الأهداف والأنشطة والملاحظات'], ['grp', '👥', 'خطط الفئات', 'متابعة جماعية لطلاب الفئة نفسها'], ['print', '🖨️', 'طباعة الأنشطة', 'أنشطة كل طالب بحسب فترته ومستواه'], ['att', '🗓️', 'الحضور', 'حصة البرنامج والفسحة'], ['cls', '🏫', 'المتابعة الصفية', 'مؤشرات الأداء داخل الفصل'], ['rep', '📄', 'التقارير', 'تقارير الطلاب وتقرير الصف (PDF)'], ['sched', '📅', 'جدول الحصص والفسحة', 'حصص الدعم الأسبوعية والتحضير'], ['post', '📝', 'الاختبار البعدي', 'إدخال درجات البعدي ومقارنتها بالقبلي'], ['studs', '🧑‍🎓', 'الطلاب', 'إضافة الطلاب وتعديل بياناتهم']];
 function roomStats(c) { const l = ALL().filter(s => s.cls === c); const g = l.reduce((a, s) => a + [...givenSet(s.id)].filter(k => !k.includes('أ') && !k.includes('ب')).length, 0);
   const at = l.map(s => attStats(s.id).pct).filter(x => x != null); return {l, n: l.length, prog: l.length ? g / (l.length * 60) * 100 : 0, att: at.length ? at.reduce((a, b) => a + b, 0) / at.length : null, cats: [1, 2, 3, 4].map(k => l.filter(s => catOf(s.total) === k).length)}; }
 const LOGO = `<svg class="logo" viewBox="0 0 220 220" role="img" aria-label="شعار برنامج بالعربية أرتقي"><defs><linearGradient id="lgA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="var(--navy)"/><stop offset="1" stop-color="var(--teal)"/></linearGradient><linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#f0a92e"/></linearGradient></defs>
@@ -1041,6 +1066,7 @@ function vHome() {
   const wkTxt = P.wk ? `الأسبوع ${P.wk} من ١٤ · ${PERN[curPeriod()].split('–')[0].trim()}` : 'حدّد «بداية الخطة» من الإعدادات';
   return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
   <button class="roomsbtn" data-t="classes" type="button"><span class="ri">🏫</span><span class="rt2"><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف · ${cls.reduce((a, c) => a + ALL().filter(s => s.cls === c).length, 0)} طالبًا</small></span><span class="rcl">${cls.slice(0, 6).map(c => `<span class="pill">${esc(c)}</span>`).join('')}${cls.length > 6 ? '<span class="pill">…</span>' : ''}</span><span class="go">دخول ←</span></button>
+  <button class="roomsbtn sch" data-t="sched" type="button"><span class="ri">📅</span><span class="rt2"><b>جدول حصص الدعم والفسحة</b><small>${meT() ? 'حصص ' + esc(meT().name) + ': ' + SCHED().filter(h => h.tid === me).map(h => DAYN[h.day] + ' (' + PERW[h.per] + ')').join('، ') : SCHED().length + ' حصص أسبوعيًّا + فسحة الأحد والاثنين'} · التحضير والحضور الشهري</small></span><span class="go">فتح ←</span></button>
   ${alertsCard()}
   <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
   <div class="hstats">
@@ -1171,12 +1197,13 @@ function vCls() {
 }
 
 /* ---------- attendance ---------- */
+const attList = () => UI.attSids ? ALL().filter(s => UI.attSids.includes(s.id)) : STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls));
 function vAtt() {
   const type = UI.att, id = type + '_' + UI.attDate, doc = S.att[id] || {marks: {}};
-  const list = STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls) );
+  const list = attList();
   const dates = Object.values(S.att).filter(d => d.type === type).map(d => d.date).sort().slice(-10);
   const cnt = {P: 0, A: 0, E: 0, L: 0}; list.forEach(s => { const c = doc.marks[s.id]; if (c) cnt[c]++; });
-  return `<div class="tools"><span class="seg">${Object.entries(ATYPE).map(([k, v]) => `<button type="button" data-att="${k}" aria-pressed="${k === type}">${k === 'ses' ? '📘' : '🌤️'} ${v}</button>`).join('')}</span>
+  return `${UI.attSids ? `<div class="tools schbar"><b>🗓️ تحضير: ${esc(UI.attTitle || '')}</b><span class="mini2">${list.length} طلاب · ${DAYN[new Date(UI.attDate + 'T12:00:00').getDay()]} ${esc(UI.attDate)}</span><button class="btn w sm" data-t="sched" type="button">📅 الرجوع إلى الجدول</button><button class="btn w sm" data-attclr="1" type="button">✕ عرض كل الطلاب</button></div>` : ''}<div class="tools"><span class="seg">${Object.entries(ATYPE).map(([k, v]) => `<button type="button" data-att="${k}" aria-pressed="${k === type}">${k === 'ses' ? '📘' : '🌤️'} ${v}</button>`).join('')}</span>
   <label>التاريخ: <input type="date" id="attDate" value="${UI.attDate}"></label><span class="mini2">${dayName(UI.attDate)}</span><label>الفئة: ${catSelect('attCat', UI.attCat, 'كل الفئات')}</label><label>الصف: ${clsSelect('attCls', UI.attCls, 'كل الصفوف')}</label>
   <button class="btn sm" id="attAll" type="button">✓ الكل حاضر</button>
   <span class="sp reprow"><label>الشهر: <input type="month" id="attM" value="${UI.attM || today().slice(0, 7)}"></label>${pdfBtn('attM', 'الحضور والغياب الشهري PDF')}</span>
@@ -1277,8 +1304,14 @@ function unionActs() {
   const rows = stuRows(), m = new Map();
   rows.forEach(r => r.keys.forEach(k => { if (!m.has(k)) m.set(k, []); m.get(k).push(r.s.id); }));
   const order = k => { const [b, n] = k.split(':'); return [b, +n]; };
-  return [...m.entries()].sort((a, b) => { const x = order(a[0]), y = order(b[0]); return x[0].localeCompare(y[0]) || x[1] - y[1]; }).map(([key, need]) => ({key, need}));
+  return [...m.entries()].filter(([k]) => tOK(k)).sort((a, b) => { const x = order(a[0]), y = order(b[0]); return x[0].localeCompare(y[0]) || x[1] - y[1]; }).map(([key, need]) => ({key, need}));
 }
+/* activity type: صفي (in the support session) / لا صفي (homework, break, home) */
+const _atDef = (() => { const m = {}; Object.entries(D.books).forEach(([b, acts]) => { const grp = {}; acts.forEach(a => { const g = a.c + a.d; (grp[g] = grp[g] || []).push(a); }); Object.values(grp).forEach(l => l.sort((x, y) => x.n - y.n).forEach((a, i) => { m[b + ':' + a.n] = i % 2 === 0 ? 'in' : 'out'; })); }); return m; })();
+const actType = key => (S.cfg.actType || {})[key] || _atDef[key] || 'in';
+const ATN = {in: '🏫 صفي', out: '🏠 لا صفي'};
+const typeChip = key => `<button type="button" class="ty ${actType(key)}" data-atype="${esc(key)}" title="اضغط للتحويل بين صفي ولا صفي">${ATN[actType(key)]}</button>`;
+const tOK = key => !UI.pType || UI.pType === 'all' || actType(key) === UI.pType;
 const copyTargets = (key, need) => UI.pOnlyNeed ? need : UI.pStu.filter(id => S.students[id]);
 function printItems() {
   const c = +UI.pCat;
@@ -1287,14 +1320,14 @@ function printItems() {
     const list = STU().filter(s => catOf(s.total) === c );
     const m = new Map();
     list.forEach(s => entriesOf(s.id).filter(e => e.date === UI.pDate).forEach(e => (e.acts || []).forEach(a => { if (!m.has(a)) m.set(a, new Set()); m.get(a).add(s.id); })));
-    return [...m.entries()].map(([key, sids]) => ({key, sids: [...sids]})).sort((a, b) => a.key.localeCompare(b.key, 'ar', {numeric: true}));
+    return [...m.entries()].filter(([k]) => tOK(k)).map(([key, sids]) => ({key, sids: [...sids]})).sort((a, b) => a.key.localeCompare(b.key, 'ar', {numeric: true}));
   }
   return UI.pMan.map(key => ({key, sids: []}));
 }
 function sheetHTML(key, st, date) {
   const [b, n] = key.split(':'); let h = (SHEETS[b] || [])[+n - 1] || '';
   if (st) { let i = 0; const vals = [st.name, st.cls, date || '']; h = h.replace(/<span class="l"><\/span>/g, m => i < 3 ? `<span class="l" style="font-weight:700">${esc(vals[i++])}</span>` : m); }
-  return `<div class="page act">${h}</div>`;
+  return `<div class="page act" style="position:relative">${h}<div style="position:absolute;top:6mm;left:8mm;font:800 11px Cairo,sans-serif;color:${actType(key) === 'in' ? '#0b5560' : '#9a5518'};border:1.5px solid currentColor;border-radius:999px;padding:1px 10px;background:#fff">${actType(key) === 'in' ? 'نشاط صفي' : 'نشاط لا صفي'}</div></div>`;
 }
 function teacherPage(items, title) {
   const acts = items.map(x => ({key: x.key, a: actOf(x.key)})).filter(x => x.a);
@@ -1325,21 +1358,23 @@ function vPrint() {
     const rows = stuRows(), P = UI.pP || curPeriod(), U = unionActs(), nSel = rows.length;
     body = rows.length ? `<div class="kpis" style="margin-top:0"><div class="kpi k1"><span>الطلاب المختارون</span><b>${nSel}</b></div><div class="kpi k2"><span>الأنشطة المطلوبة في ${PERN[P].split('–')[0]}</span><b>${U.length}</b></div><div class="kpi k3"><span>الأنشطة المحدّدة للطباعة</span><b>${U.filter(x => UI.pAct.has(x.key)).length}</b></div><div class="kpi k4"><span>عدد الأوراق</span><b>${U.filter(x => UI.pAct.has(x.key)).reduce((a, x) => a + copyTargets(x.key, x.need).length, 0)}</b></div></div>
     <div class="tw" style="margin-top:10px"><table><thead><tr><th><input type="checkbox" id="pActAll"${U.length && U.every(x => UI.pAct.has(x.key)) ? ' checked' : ''}></th><th>النشاط</th><th class="nm">العنوان</th><th>الكفاية</th><th>المستوى</th><th class="nm">الطلاب المطلوب لهم النشاط</th><th>عدد النسخ</th></tr></thead><tbody>${
-      U.map(x => { const a = actOf(x.key) || {}, on = UI.pAct.has(x.key), n = copyTargets(x.key, x.need).length; return `<tr${on ? ' style="background:#edf6f7"' : ''}><td><input type="checkbox" data-pact="${esc(x.key)}"${on ? ' checked' : ''}></td><td><b>${esc(actLabel(x.key))}</b></td><td class="nm">${esc(a.t || '')}</td><td>${ICON[a.c] || ''} ${SH[a.c] || ''}</td><td>${STARS[a.d] || ''}</td><td class="l mini2">${x.need.map(id => esc((S.students[id] || {}).name || '')).join('، ')} <span class="pill">${x.need.length} من ${nSel}</span></td><td><b style="font-size:16px">${on ? n : '—'}</b></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">لا أنشطة متبقية لهؤلاء الطلاب في هذه الفترة ✓</td></tr>'}</tbody></table></div>
+      U.map(x => { const a = actOf(x.key) || {}, on = UI.pAct.has(x.key), n = copyTargets(x.key, x.need).length; return `<tr${on ? ' style="background:#edf6f7"' : ''}><td><input type="checkbox" data-pact="${esc(x.key)}"${on ? ' checked' : ''}></td><td><b>${esc(actLabel(x.key))}</b></td><td class="nm">${esc(a.t || '')} ${typeChip(x.key)}</td><td>${ICON[a.c] || ''} ${SH[a.c] || ''}</td><td>${STARS[a.d] || ''}</td><td class="l mini2">${x.need.map(id => esc((S.students[id] || {}).name || '')).join('، ')} <span class="pill">${x.need.length} من ${nSel}</span></td><td><b style="font-size:16px">${on ? n : '—'}</b></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">لا أنشطة متبقية لهؤلاء الطلاب في هذه الفترة ✓</td></tr>'}</tbody></table></div>
     <p class="hint">عدد النسخ = عدد الطلاب المختارين (${nSel})${UI.pOnlyNeed ? '، مقصورًا على من يحتاج النشاط في خطته' : ''}، وتُطبع كل نسخة باسم طالب وصفّه وتاريخ اليوم. الأنشطة من الخطة الفردية: الكفاية المقرّرة في ${PERN[P]} من مستوى بدء كل طالب صعودًا.</p>`
       : '<div class="empty">اختر المستوى ثم الطلاب من القائمة لتظهر أنشطتهم المطلوبة.</div>';
   } else if (UI.pMode === 'date') {
     body = items.length ? `<div class="tw"><table><thead><tr><th><input type="checkbox" id="pAll"${!sel || items.every(x => sel.has(x.key)) ? ' checked' : ''}></th><th>النشاط</th><th class="nm">العنوان</th><th>الكفاية</th><th>المستوى</th><th class="nm">الطلاب</th><th>عدد الأوراق</th></tr></thead><tbody>${
-      items.map(x => { const a = actOf(x.key) || {}; return `<tr><td><input type="checkbox" data-psel="${esc(x.key)}"${!sel || sel.has(x.key) ? ' checked' : ''}></td><td><b>${esc(actLabel(x.key))}</b></td><td class="nm">${esc(a.t || '')}</td><td>${ICON[a.c] || ''} ${SH[a.c] || ''}</td><td>${STARS[a.d] || ''}</td><td class="l mini2">${x.sids.map(id => esc((S.students[id] || {}).name || '')).join('، ')}</td><td>${UI.pPer === 'stu' ? x.sids.length : UI.pCopies}</td></tr>`; }).join('')}</tbody></table></div>`
+      items.map(x => { const a = actOf(x.key) || {}; return `<tr><td><input type="checkbox" data-psel="${esc(x.key)}"${!sel || sel.has(x.key) ? ' checked' : ''}></td><td><b>${esc(actLabel(x.key))}</b></td><td class="nm">${esc(a.t || '')} ${typeChip(x.key)}</td><td>${ICON[a.c] || ''} ${SH[a.c] || ''}</td><td>${STARS[a.d] || ''}</td><td class="l mini2">${x.sids.map(id => esc((S.students[id] || {}).name || '')).join('، ')}</td><td>${UI.pPer === 'stu' ? x.sids.length : UI.pCopies}</td></tr>`; }).join('')}</tbody></table></div>`
       : `<div class="empty">لا توجد أنشطة مسجّلة لطلاب ${CATN[c]} بتاريخ ${esc(UI.pDate)}.<br>سجّلها أولًا من «الخطط الفردية» أو «خطط الفئات»، أو استخدم «اختيار يدوي».</div>`;
   } else {
     body = `<div class="frm"><label>الكتاب<select id="pBook">${books.map(b => `<option value="${b}"${b === UI.pBook ? ' selected' : ''}>${BOOKN[b]}</option>`).join('')}</select></label>
-    <label class="wide">الأنشطة ${msel('pMan', actGroups(UI.pBook, null, null), UI.pMan, 'اختر نشاطًا أو أكثر للطباعة')}</label><div><button class="btn w" id="pManOk" type="button">اعتماد الاختيار</button></div></div>
+    <label class="wide">الأنشطة ${msel('pMan', actGroups(UI.pBook, null, null).map(g => Object.assign(g, {items: g.items.filter(i => tOK(i.v)).map(i => Object.assign(i, {t: i.t + ' <small class="tyt ' + actType(i.v) + '">' + ATN[actType(i.v)] + '</small>'}))})).filter(g => g.items.length), UI.pMan, 'اختر نشاطًا أو أكثر للطباعة')}</label><div><button class="btn w" id="pManOk" type="button">اعتماد الاختيار</button></div></div>
     ${UI.pMan.length ? `<p class="hint">المختار: ${UI.pMan.map(k => `<span class="pill a">${esc(actLabel(k))}</span>`).join('')}</p>` : ''}`;
   }
   const d = UI.pMode === 'stu' ? (printItems().some(x => x.sids.length) ? printDoc() : null) : (UI.pMode === 'date' && !items.length) || (UI.pMode === 'man' && !UI.pMan.length) ? null : printDoc();
   const P = UI.pP || curPeriod();
-  return `<div class="tools"><span class="seg"><button type="button" data-pmode="stu" aria-pressed="${UI.pMode === 'stu'}">👤 بحسب الطالب والفترة</button><button type="button" data-pmode="date" aria-pressed="${UI.pMode === 'date'}">📅 بحسب التاريخ والفئة</button><button type="button" data-pmode="man" aria-pressed="${UI.pMode === 'man'}">✋ اختيار يدوي</button></span></div>
+  const tCnt = t => Object.keys(_atDef).filter(k => k.startsWith(String(c) + ':') && actType(k) === t).length;
+  return `<div class="tools ttype"><span class="mini2">نوع الأنشطة:</span><span class="seg">${[['all', '🗂️ كل الأنشطة'], ['in', '🏫 الأنشطة الصفية (' + tCnt('in') + ')'], ['out', '🏠 الأنشطة اللاصفية (' + tCnt('out') + ')']].map(([k, n]) => `<button type="button" data-ptype="${k}" aria-pressed="${(UI.pType || 'all') === k}">${n}</button>`).join('')}</span><span class="mini2">الصفية: تُنفَّذ في حصة الدعم مع المعلم · اللاصفية: تُنجز في الفسحة أو البيت — من كل كفاية ومستوى</span></div>
+  <div class="tools"><span class="seg"><button type="button" data-pmode="stu" aria-pressed="${UI.pMode === 'stu'}">👤 بحسب الطالب والفترة</button><button type="button" data-pmode="date" aria-pressed="${UI.pMode === 'date'}">📅 بحسب التاريخ والفئة</button><button type="button" data-pmode="man" aria-pressed="${UI.pMode === 'man'}">✋ اختيار يدوي</button></span></div>
   ${UI.pMode === 'stu' ? (() => { const list = STU().filter(x => catOf(x.total) === c );
     return `<div class="tools"><span class="seg">${CATSV().map(k => `<button type="button" data-pcat="${k}" aria-pressed="${k === c}">${CATN[k]}</button>`).join('')}</span></div>
   <div class="tools chkwrap">${chkList('pStu', list, UI.pStu, '🧑‍🎓 طلاب ' + CATN[c] + ' – اضغط المربع بجانب الاسم لتظهر أنشطته')}</div>
@@ -1412,7 +1447,7 @@ function vSet() {
   <div class="card" style="margin-top:12px"><div class="ch"><h3>📋 القوائم المنسدلة (الملاحظات والإجراءات والمقترحات)</h3></div><div class="cb"><div class="frm"><label>القائمة<select id="lK">${Object.entries(LISTN).map(([k, v]) => `<option value="${k}"${k === UI.lk ? ' selected' : ''}>${v}</option>`).join('')}</select></label><label>المجموعة<select id="nG">${LIST(UI.lk).map((g, i) => `<option value="${i}">${esc(g.g)}</option>`).join('')}<option value="new">+ مجموعة جديدة…</option></select></label><label class="wide">النص<input type="text" id="nT" placeholder="اكتب الملاحظة أو الإجراء أو المقترح"></label><div><button class="btn sm" id="addN" type="button">➕ إضافة إلى القائمة</button></div></div>
   <div class="tw" style="max-height:320px;overflow:auto;margin-top:8px"><table><tbody>${LIST(UI.lk).map((g, gi) => g.items.map((t, ti) => `<tr><td class="mini2">${esc(g.g)}</td><td class="l">${esc(t)}</td><td><button class="btn r sm" data-del="note:${gi}:${ti}" type="button">حذف</button></td></tr>`).join('')).join('')}</tbody></table></div></div></div></div>`,
   gen: () => `<div class="card" style="margin-top:12px"><div class="ch"><h3>🏫 بيانات عامة</h3></div><div class="cb"><div class="frm"><label>العام الدراسي<input type="text" id="cYear" value="${esc(S.cfg.year)}"></label><label>المدرسة<input type="text" id="cSchool" value="${esc(S.cfg.school)}"></label><label>منسق البرنامج<input type="text" id="cCoord" value="${esc(S.cfg.coord)}"></label><label>مدير المدرسة<input type="text" id="cPrin" value="${esc(S.cfg.principal)}"></label><label>بداية الخطة (أول أيام الأسبوع الثالث)<input type="date" id="cStart" value="${esc(S.cfg.start || '')}"></label><div><button class="btn" id="cSave" type="button">💾 حفظ</button></div></div></div></div>`,
-  look: lookCard};
+  look: lookCard, sch: schedEditor};
   if (!P[UI.sTab]) UI.sTab = 'look';
   return `<div class="tools setnav"><span class="seg">${SET_T.map(([k, n]) => `<button type="button" data-stab="${k}" aria-pressed="${k === UI.sTab}">${n}</button>`).join('')}</span></div>` + P[UI.sTab]();
 }
@@ -1461,11 +1496,45 @@ async function runPdoc(kind, bt) {
   if (kind === 'ind1') { const s = S.students[UI.sid]; if (!s) return toast('اختر طالبًا'); list = [planDoc(s)]; name = 'الخطة_الفردية_' + s.name; }
   else if (kind === 'indAll') { const l = filtered(); if (!l.length) return toast('لا يوجد طلاب'); list = l.map(planDoc); name = 'الخطط_الفردية_' + (UI.room ? clsName(UI.room) : 'الطلاب'); }
   else if (kind === 'grp') { const c = +UI.cat; list = [groupDoc(c, STU().filter(s => catOf(s.total) === c))]; name = 'خطة_' + CATN[c].split('–')[0].trim() + (UI.room ? '_' + UI.room : ''); }
-  else if (kind === 'attM') { const ym = UI.attM || today().slice(0, 7); const l = STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls)); if (!l.length) return toast('لا يوجد طلاب');
+  else if (kind === 'attM') { const ym = tab === 'sched' ? (UI.wk || weekSun(today())).slice(0, 7) : (UI.attM || today().slice(0, 7)); const l = tab === 'sched' ? ALL().filter(s => SCHED().some(h => (!meT() || h.tid === me) && h.cls === s.cls)) : STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls)); if (!l.length) return toast('لا يوجد طلاب');
     list = [monthAttDoc(ym, l, UI.room ? 'الصف: ' + clsName(UI.room) : UI.attCls ? 'الصف: ' + clsName(UI.attCls) : UI.attCat ? CATN[UI.attCat] : 'جميع الطلاب')]; name = 'الحضور_الشهري_' + ym + (UI.room ? '_' + UI.room : ''); }
   else if (kind === 'parAll') { const l = UI.rep === 'cat' ? STU().filter(s => String(catOf(s.total)) === String(UI.rCat)) : UI.rep === 'cls' ? STU().filter(s => s.cls === UI.rCls) : filtered(); if (!l.length) return toast('لا يوجد طلاب'); list = l.map(reportParent); name = 'تقارير_أولياء_الأمور_' + (UI.rep === 'cat' ? CATN[UI.rCat].split('–')[0].trim() : UI.rep === 'cls' ? UI.rCls : UI.room || 'الطلاب'); }
   name = name.replace(/\//g, '-').replace(/\s+/g, '_');
   if (bt) bt.disabled = true; await makePdf(list, name); if (bt) bt.disabled = false;
+}
+
+/* ---------- schedule page ---------- */
+function vSched() {
+  const sun = UI.wk || weekSun(today()), dates = [0, 1, 2, 3, 4].map(i => addDays(sun, i)), T = (S.cfg.teachers || []).filter(t => !meT() || t.id === me);
+  const fmtD = d => `${+d.slice(8)}/${+d.slice(5, 7)}`;
+  const stBadge = (type, date, sids) => { if (!sids.length) return '<span class="gst">لا طلاب</span>'; const a = attState(type, date, sids); return a.done ? `<span class="gst full">✓ حُضّر ${a.p}/${a.n}</span>` : date <= today() ? '<span class="gst none">⏳ لم يُحضَّر</span>' : '<span class="gst">قادم</span>'; };
+  const grid = t => { const L = SCHED().filter(h => !t || h.tid === t.id); if (!L.length) return '<div class="empty">لا توجد حصص دعم لهذا المعلم في الجدول.</div>';
+    return `<div class="tw"><table class="sch"><thead><tr><th>اليوم \\ الحصة</th>${[1, 2, 3, 4, 5, 6, 7].map(p => `<th>${PERW[p]}</th>`).join('')}</tr></thead><tbody>${[0, 1, 2, 3, 4].map(d => `<tr><th class="dh2">${DAYN[d]}<br><small>${fmtD(dates[d])}</small></th>${[1, 2, 3, 4, 5, 6, 7].map(p => { const hs = L.filter(h => h.day === d && h.per === p);
+      return `<td>${hs.map(h => { const st = sesStu(h); return `<div class="sc2"><b>${esc(h.cls)}</b>${h.cat ? ' ' + catChip(+h.cat) : ''}${t ? '' : `<small class="tn">${esc(tName(h.tid))}</small>`}<small>${st.length} طلاب</small>${stBadge('ses', dates[d], st.map(x => x.id))}<button class="btn sm" data-schatt="ses|${dates[d]}|${h.id}" type="button">🗓️ تحضير</button></div>`; }).join('')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`; };
+  const brks = BRK().filter(b => !meT() || b.tid === me);
+  const brkTbl = `<div class="tw"><table><thead><tr><th>اليوم</th><th>التاريخ</th><th>المعلم</th><th class="nm">الطلاب</th><th>العدد</th><th>الحضور</th><th></th></tr></thead><tbody>${brks.map(b => `<tr><td><b>${DAYN[b.day]}</b></td><td>${fmtD(dates[b.day])}</td><td>${esc(tName(b.tid))}</td><td class="l mini2">${b.sids.map(id => esc(((S.students[id] || {}).name || '').split(' ').slice(0, 2).join(' '))).join('، ')}</td><td>${b.sids.length}</td><td>${stBadge('brk', dates[b.day], b.sids)}</td><td><button class="btn sm" data-schatt="brk|${dates[b.day]}|${b.id}" type="button">🗓️ تحضير</button></td></tr>`).join('') || '<tr><td colspan="7" class="empty">لا يوجد طلاب في جدول الفسحة.</td></tr>'}</tbody></table></div>`;
+  // monthly follow-up
+  const ym = sun.slice(0, 7), mDays = []; for (let d = ym + '-01'; d.startsWith(ym); d = addDays(d, 1)) mDays.push(d);
+  const mon = T.map(t => { const L = SCHED().filter(h => h.tid === t.id); let sch = 0, held = 0, P = 0, N = 0, bs = 0, bh = 0;
+    mDays.forEach(d => { const wd = new Date(d + 'T12:00:00').getDay(); if (d > today()) return; L.filter(h => h.day === wd).forEach(h => { const ids = sesStu(h).map(x => x.id); if (!ids.length) return; sch++; const a = attState('ses', d, ids); if (a.done) { held++; P += a.p; N += a.done; } });
+      BRK().filter(b => b.tid === t.id && b.day === wd).forEach(b => { bs++; if (attState('brk', d, b.sids).done) bh++; }); });
+    return `<tr><td class="nm">${esc(t.name)}</td><td>${L.length}</td><td>${sch}</td><td><b>${held}</b></td><td>${N ? fmt(P / N * 100, 0) + '%' : '—'}</td><td>${bs}</td><td><b>${bh}</b></td></tr>`; }).join('');
+  return `<div class="tools"><button class="btn w sm" data-wk="-7" type="button">→ الأسبوع السابق</button><b>📅 الأسبوع: ${DAYN[0]} ${fmtD(dates[0])} – ${DAYN[4]} ${fmtD(dates[4])} / ${dates[0].slice(0, 4)}</b><button class="btn w sm" data-wk="7" type="button">الأسبوع التالي ←</button><button class="btn sm" data-wk="0" type="button">هذا الأسبوع</button>${scopeTag()}<span class="sp mini2">اضغط «تحضير» لفتح سجل الحضور بطلاب الحصة مباشرة</span></div>
+  ${meT() ? T.map(t => `<div class="card" style="margin-top:12px"><div class="ch"><h3>📘 جدول حصص الدعم الأسبوعية – ${esc(t.name)}</h3><small>${SCHED().filter(h => h.tid === t.id).length} حصص في الأسبوع</small></div><div class="cb">${grid(t)}</div></div>`).join('')
+    : `<div class="card" style="margin-top:12px"><div class="ch"><h3>📘 الحصص الأسبوعية لبرنامج «بالعربية أرتقي» – الحلقتان الثانية والثالثة</h3><small>${SCHED().length} حصص في الأسبوع · اختر اسمك من «المعلم المتابع» لعرض حصصك فقط</small></div><div class="cb">${grid(null)}</div></div>`}
+  <div class="card o" style="margin-top:12px"><div class="ch"><h3>🌤️ جدول الفسحة لتحضير الطلاب – الأحد والاثنين</h3><small>طلاب كل معلم من صفوف حصصه</small></div><div class="cb">${brkTbl}</div></div>
+  <div class="card" style="margin-top:12px"><div class="ch"><h3>📊 متابعة الحضور الشهري – ${MONTHS[+ym.slice(5) - 1]} ${ym.slice(0, 4)}</h3><small>حتى اليوم</small></div><div class="cb"><div class="tw"><table><thead><tr><th class="nm">المعلم</th><th>حصص في الأسبوع</th><th>حصص مجدولة في الشهر</th><th>حصص حُضّرت</th><th>نسبة حضور الطلاب</th><th>فسحات مجدولة</th><th>فسحات حُضّرت</th></tr></thead><tbody>${mon}</tbody></table></div>
+  <div class="reprow" style="margin-top:8px">${pdfBtn('attM', 'سجل الحضور والغياب الشهري PDF')}<span class="mini2">يُنزَّل سجل شهر ${MONTHS[+ym.slice(5) - 1]} لطلاب ${meT() ? 'صفوفك' : 'البرنامج'} (الحصص والفسحات).</span></div></div></div>
+  ${meT() ? '' : `<div class="tools" style="margin-top:12px"><span class="mini2">لتعديل الجدول: ☰ ← الإعدادات ← «📅 الجدول»</span></div>`}`;
+}
+function schedEditor() {
+  const L = SCHED(), T = S.cfg.teachers || [];
+  return `<div class="card" style="margin-top:12px"><div class="ch"><h3>📅 جدول حصص الدعم الأسبوعية</h3><small>${S.cfg.sched ? 'معدّل' : 'من الجدول الرسمي للفصل الأول'}</small></div><div class="cb">
+  <div class="frm"><label>المعلم${tSelect('scT', UI.scT || (T[0] || {}).id)}</label><label>اليوم<select id="scD">${[0, 1, 2, 3, 4].map(d => `<option value="${d}">${DAYN[d]}</option>`).join('')}</select></label><label>الحصة<select id="scP">${[1, 2, 3, 4, 5, 6, 7].map(p => `<option value="${p}">${PERW[p]}</option>`).join('')}</select></label><label>الصف${clsSelect('scC', CLASS_LIST[0])}</label><label>الفئة (اختياري)${catSelect('scK', '', 'كل طلاب الصف')}</label><div><button class="btn sm" id="scAdd" type="button">➕ إضافة الحصة</button></div></div>
+  <div class="tw" style="margin-top:8px"><table><thead><tr><th>اليوم</th><th>الحصة</th><th>الصف</th><th>الفئة</th><th>الطلاب</th><th class="nm">المعلم</th><th></th></tr></thead><tbody>${[...L].sort((a, b) => a.day - b.day || a.per - b.per).map(h => `<tr><td>${DAYN[h.day]}</td><td>${PERW[h.per]}</td><td>${esc(h.cls)}</td><td>${h.cat ? catChip(+h.cat) : 'الكل'}</td><td>${sesStu(h).length}</td><td class="nm">${esc(tName(h.tid))}</td><td><button class="btn r sm" data-schdel="${h.id}" type="button">حذف</button></td></tr>`).join('')}</tbody></table></div></div></div>
+  <div class="card o" style="margin-top:12px"><div class="ch"><h3>🌤️ جدول الفسحة (الأحد والاثنين)</h3><small>${S.cfg.brk ? 'معدّل' : 'افتراضي: طلاب كل معلم من صفوف حصصه'}</small></div><div class="cb">
+  <div class="tw"><table><thead><tr><th>اليوم</th><th class="nm">المعلم</th><th class="nm">الطلاب</th><th></th></tr></thead><tbody>${BRK().map(b => `<tr><td>${DAYN[b.day]}</td><td class="nm">${esc(tName(b.tid))}</td><td class="l">${chkList('bk_' + b.id, ALL().filter(s => s.sids !== 0), b.sids, b.sids.length + ' طالبًا')}</td><td><button class="btn sm" data-brksave="${b.id}" type="button">💾 حفظ</button></td></tr>`).join('')}</tbody></table></div>
+  ${S.cfg.brk ? '<button class="btn w sm" id="brkReset" type="button">↺ إرجاع جدول الفسحة الافتراضي</button>' : ''}</div></div>`;
 }
 
 /* ---------- post-test ---------- */
@@ -1534,7 +1603,7 @@ function alertsCard() {
 }
 
 /* ---------- page appearance ---------- */
-const SET_T = [['look', '🎨 إعدادات الصفحة'], ['acc', '🔑 كلمة المرور والنسخ'], ['gh', '🔗 الربط مع GitHub'], ['tch', '👨‍🏫 المعلمون والصفوف'], ['lists', '📋 الأهداف والقوائم'], ['gen', '🏫 بيانات عامة']];
+const SET_T = [['look', '🎨 إعدادات الصفحة'], ['sch', '📅 الجدول'], ['acc', '🔑 كلمة المرور والنسخ'], ['gh', '🔗 الربط مع GitHub'], ['tch', '👨‍🏫 المعلمون والصفوف'], ['lists', '📋 الأهداف والقوائم'], ['gen', '🏫 بيانات عامة']];
 const THEMES = {teal: ['فيروزي', '#0f7a83'], blue: ['أزرق', '#2f5fb3'], green: ['أخضر', '#23875a'], purple: ['بنفسجي', '#6b4fb3'], maroon: ['عنابي', '#9b2c3f'], orange: ['برتقالي', '#c06a1d'], slate: ['رمادي', '#475569']};
 const BGS = {gray: ['رمادي فاتح', '#eef2f5'], cream: ['كريمي', '#f8f3ea'], mint: ['نعناعي', '#edf5f3'], white: ['أبيض', '#ffffff']};
 const LOOK0 = {theme: 'teal', c: '', bg: 'gray', fs: 14, rad: 14, den: 'normal', hdr: 1};
@@ -1570,7 +1639,8 @@ const GUIDE = [
   ['🏫', 'داخل الصف', ['تظهر خانات الصف: الخطط الفردية، خطط الفئات، طباعة الأنشطة، الحضور، المتابعة الصفية، التقارير، الطلاب.', 'كل خانة تعمل على طلاب هذا الصف فقط، وتظهر فيها فئات الصف الموجودة فقط.']],
   ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، والمعلم، ومدى التحقّق، والدرجة. يظهر مربع «🖨️ الأنشطة المطبوعة للطالب وأهدافها»: كل نشاط طُبع للطالب من «طباعة الأنشطة» وتحته «يحقّق الهدف»: الهدف المرتبط به مختار تلقائيًّا، ويمكنك تغييره أو إضافة هدف آخر من قائمة الأهداف (تحفظ المنصة ربطك للنشاط لاستخدامه لاحقًا). حدّد لكل نشاط طُبّق: تحقّق / جزئيًّا / لم يتحقّق، فتتحقّق أهدافه. وخانة «الأهداف» تحتها لأي أهداف أخرى تحقّقت. ثم اختر الملاحظات والإجراءات والمقترحات واضغط «حفظ المتابعة».', 'بعد التقييم ينتقل النشاط إلى «أنشطة مطبوعة قُيّمت سابقًا»، ويُحتسب هدفه في قسم «🎯 أهداف الخطة الفردية» الذي يعرض أهداف كل كفاية وحالتها، ويتحدّث من الخطة الفردية وخطط الفئات معًا', 'قسم «🎯 أهداف الخطة الفردية» يعرض أهداف كل كفاية من مستوى بدء الطالب وحالة كل هدف، ويتحدّث تلقائيًّا من الخطة الفردية وخطط الفئات معًا، ويظهر عدد الأهداف المتحقّقة لكل كفاية في جدول الخطة والتقارير', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
   ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'يظهر مربع «الأنشطة المطبوعة لطلاب الفئة»: كل نشاط طُبع لطلاب الفئة وأسماؤهم والهدف الذي يحققه؛ حدّد مدى تحقّقه واضغط «حفظ متابعة الفئة»؛ يُحتسب الهدف في الخطة الفردية لكل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
-  ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. عند الطباعة أو التنزيل تُسجَّل الأنشطة المطبوعة في خطة كل طالب لتقييم أهدافها لاحقًا. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.']],
+  ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. عند الطباعة أو التنزيل تُسجَّل الأنشطة المطبوعة في خطة كل طالب لتقييم أهدافها لاحقًا. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.', 'أعلى الصفحة «نوع الأنشطة»: 🏫 الأنشطة الصفية (تُنفَّذ في حصة الدعم) و🏠 الأنشطة اللاصفية (للفسحة أو البيت)، مقسّمة من كل كفاية ومستوى. اضغط شارة النوع بجانب النشاط لتحويله، ويُطبع نوع النشاط أعلى ورقته.']],
+  ['📅', 'جدول حصص الدعم والفسحة', ['من الصفحة الرئيسية اضغط «جدول حصص الدعم والفسحة» (أو خانة «جدول الحصص والفسحة» داخل الصف). يظهر الجدول الأسبوعي الرسمي لحصص البرنامج، وعند اختيار اسم المعلم تظهر حصصه فقط.', 'في كل حصة: الصف وعدد طلابه وحالة التحضير (✓ حُضّر / ⏳ لم يُحضَّر / قادم). اضغط «🗓️ تحضير» فيُفتح سجل الحضور بطلاب الحصة وتاريخها مباشرة.', '«جدول الفسحة» يومي الأحد والاثنين: طلاب كل معلم وتحضيرهم بالطريقة نفسها.', '«متابعة الحضور الشهري»: الحصص المجدولة والمحضَّرة ونسبة حضور الطلاب لكل معلم، مع زر «سجل الحضور والغياب الشهري PDF». تنقّل بين الأسابيع بأزرار الأسبوع السابق والتالي.', 'تعديل الجدول وجدول الفسحة: ☰ ← الإعدادات ← «📅 الجدول».']],
   ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.', 'للتقرير الشهري: اختر «الشهر» ثم اضغط «📄 الحضور والغياب الشهري PDF»؛ يظهر لكل طالب حضوره في الحصص والفسحات خلال الشهر والمجاميع والنسبة.']],
   ['🏫', 'المتابعة الصفية', ['اختر التاريخ وفترة المتابعة، ثم قيّم كل طالب في المؤشرات (١–٤) وحدّد الدعم المقدَّم والتقدّم وملاحظات معلم الفصل.', 'في الأسفل: ملاحظات عامة، ثم التوصيات، ثم إجراءات معلم البرنامج، واضغط «حفظ المتابعة الصفية».']],
   ['📄', 'التقارير', ['تقرير الطالب: اختر الطالب، ثم اختر ملاحظات المعلم والتوصيات من القوائم واحفظها، واطبع التقرير أو نزّله PDF.', 'تقرير الفئة وتقرير الصف يعرضان متابعة جميع الطلاب، ويمكن تنزيل تقارير جميع الطلاب في ملف PDF واحد.', 'زر «📄 تقارير أولياء الأمور» يُنزّل تقارير أولياء الأمور (عربي / English) لكل طلاب القائمة أو الفئة أو الصف في ملف PDF واحد.']],
@@ -1618,6 +1688,18 @@ document.addEventListener('click', async ev => {
   if (b.dataset.pall) { const sid = b.dataset.pall, r = stuRows().find(x => x.s.id === sid); if (r) { const all = r.keys.every(k => UI.pPick.has(sid + '|' + k)); r.keys.forEach(k => all ? UI.pPick.delete(sid + '|' + k) : UI.pPick.set(sid + '|' + k, UI.pPick.get(sid + '|' + k) || 1)); } render(); return; }
   if (b.dataset.pex) { const k = b.dataset.pex; UI.pEx.has(k) ? UI.pEx.delete(k) : UI.pEx.add(k); render(); return; }
   if (b.dataset.pper) { UI.pP = +b.dataset.pper; render(); return; }
+  if (b.dataset.wk != null) { const v = +b.dataset.wk; UI.wk = v ? addDays(UI.wk || weekSun(today()), v) : weekSun(today()); render(); return; }
+  if (b.dataset.schatt) { const [type, date, hid] = b.dataset.schatt.split('|'); let sids = [], title = '';
+    if (type === 'ses') { const h = SCHED().find(x => x.id === hid); if (!h) return; sids = sesStu(h).map(x => x.id); title = `حصة الدعم – ${DAYN[h.day]} الحصة ${PERW[h.per]} – ${h.cls} – ${tName(h.tid)}`; }
+    else { const k = BRK().find(x => x.id === hid); if (!k) return; sids = k.sids; title = `فسحة ${DAYN[k.day]} – ${tName(k.tid)}`; }
+    if (!sids.length) return toast('لا يوجد طلاب في هذه الحصة'); UI.att = type; UI.attDate = date; UI.attSids = sids; UI.attTitle = title; UI.attCat = ''; UI.attCls = ''; UI.room = ''; tab = 'att'; render(); window.scrollTo({top: 0}); return; }
+  if (b.dataset.attclr != null) { UI.attSids = null; UI.attTitle = ''; render(); return; }
+  if (b.dataset.schdel) { S.cfg.sched = SCHED().filter(h => h.id !== b.dataset.schdel); await saveCfg(); render(); return; }
+  if (b.id === 'scAdd') { const h = {id: 'h' + uid(), tid: $('#scT').value, day: +$('#scD').value, per: +$('#scP').value, cls: $('#scC').value, cat: $('#scK').value || ''}; if (!h.tid) return toast('اختر المعلم'); S.cfg.sched = [...SCHED(), h]; await saveCfg(); toast('✓ أُضيفت الحصة'); render(); return; }
+  if (b.dataset.brksave) { const id = b.dataset.brksave; S.cfg.brk = BRK().map(x => x.id === id ? Object.assign({}, x, {sids: mselVal('bk_' + id)}) : x); await saveCfg(); toast('✓ حُفظ جدول الفسحة'); render(); return; }
+  if (b.id === 'brkReset') { delete S.cfg.brk; await saveCfg(); render(); return; }
+  if (b.dataset.ptype) { UI.pType = b.dataset.ptype; UI.pAct = new Set([...UI.pAct].filter(tOK)); UI.pSel = null; render(); return; }
+  if (b.dataset.atype) { const k = b.dataset.atype; S.cfg.actType = Object.assign({}, S.cfg.actType || {}, {[k]: actType(k) === 'in' ? 'out' : 'in'}); await saveCfg(); toast('حُوِّل النشاط ' + actLabel(k) + ' إلى ' + ATN[actType(k)]); render(); return; }
   if (b.dataset.pmode) { UI.pMode = b.dataset.pmode; UI.pSel = null; render(); return; }
   if (b.dataset.pcat) { if (UI.pCat !== b.dataset.pcat) { UI.pStu = []; UI.pPick = new Map(); UI.pAct = new Set(); } UI.pCat = b.dataset.pcat; UI.pSel = null; UI.pMan = []; UI.pBook = b.dataset.pcat; render(); return; }
   if (b.dataset.cfcls) { UI.cfCls = b.dataset.cfcls; render(); return; }
@@ -1647,7 +1729,7 @@ document.addEventListener('click', async ev => {
         if (r.ind.some(x => x) || r.sup.length || r.prog || r.note || r.nsel.length) rows[tr.dataset.sid] = r; });
       if (!Object.keys(rows).length) return toast('أدخل مؤشرات طالب واحد على الأقل');
       await put('cf', id, {cls: UI.cfCls, date: UI.cfDate, per: +UI.cfPer, tid: UI.cfT, rows, gnote: $('#cfG').value.trim(), rnote: $('#cfR').value.trim(), act: $('#cfA').value.trim(), gsel: mselVal('cfGs'), rsel: mselVal('cfRs'), asel: mselVal('cfAs'), ts: Date.now()}); toast('✓ حُفظت المتابعة الصفية'); render(); break; }
-    case 'attAll': { const id = UI.att + '_' + UI.attDate, d = JSON.parse(JSON.stringify(S.att[id] || {type: UI.att, date: UI.attDate, marks: {}})); STU().filter(s => (!UI.attCat || String(catOf(s.total)) === UI.attCat) && (!UI.attCls || s.cls === UI.attCls) ).forEach(s => { if (!d.marks[s.id]) d.marks[s.id] = 'P'; }); await put('att', id, d); render(); break; }
+    case 'attAll': { const id = UI.att + '_' + UI.attDate, d = JSON.parse(JSON.stringify(S.att[id] || {type: UI.att, date: UI.attDate, marks: {}})); attList().forEach(s => { if (!d.marks[s.id]) d.marks[s.id] = 'P'; }); await put('att', id, d); render(); break; }
     case 'rnSave': { const sid = UI.rSid; await put('rn', sid, {sel: mselVal('rnSel'), x: $('#rnX').value.trim(), rec: mselVal('rnRec'), rx: $('#rnRX').value.trim(), tid: $('#rnT').value, ts: Date.now()}); toast('✓ حُفظت الملاحظات والتوصيات'); render(); break; }
     case 'rPrint': document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } catch (e) { toast('الطباعة غير متاحة هنا – استخدم التنزيل'); } setTimeout(() => document.body.classList.remove('printing'), 400); }, 50); break;
     case 'rPdf': { const nm = UI.rep === 'stu' ? (UI.repPar ? 'تقرير_ولي_الأمر_' : 'تقرير_') + ((S.students[UI.rSid] || {}).name || 'طالب') : UI.rep === 'cat' ? 'تقرير_' + CATN[UI.rCat].split('–')[0].trim() : 'تقرير_الصف_' + UI.rCls.replace('/', '-');
