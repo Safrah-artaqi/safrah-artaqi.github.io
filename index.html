@@ -591,6 +591,19 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .glink{display:flex;align-items:flex-start;gap:8px;margin-top:6px;flex-wrap:wrap}.glink>span{font-size:12.5px;font-weight:800;color:var(--teal-d);padding-top:6px;white-space:nowrap}
 .glink .msel{flex:1 1 260px;min-width:0}.glink .msel>summary{max-width:none;white-space:normal}
 .msel.gsel>summary{font-weight:700;color:var(--teal-d);background:#fff}
+/* v2: consistent compact tick boxes on all devices (incl. iOS Safari) + more room for text */
+.mlist label{display:grid!important;grid-template-columns:18px minmax(0,1fr);column-gap:9px;align-items:start;white-space:normal}
+.mlist label.sc{grid-template-columns:18px minmax(0,1fr)}
+.mlist label input[type=checkbox],.frm .mlist label input[type=checkbox]{-webkit-appearance:none;appearance:none;width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;flex:none!important;margin:3px 0 0!important;padding:0!important;border:2px solid var(--teal);border-radius:5px;background:#fff;display:grid;place-content:center;cursor:pointer;box-sizing:border-box}
+.mlist label input[type=checkbox]:checked{background:var(--teal);border-color:var(--teal)}
+.mlist label input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.mlist label>span{min-width:0;overflow-wrap:anywhere}
+.chkl .mlist label.sc input[type=checkbox]{grid-row:1/3}
+/* an open dropdown takes the full width of the form, so the text has room */
+.frm label.wide:has(details.msel[open]),.frm label:has(details.msel[open]){grid-column:1/-1}
+.frm details.msel[open] .mlist{max-height:420px}
+table.cf td:last-child{min-width:260px}.msel.sm .mlist{min-width:250px}
+@media (max-width:600px){.mlist label input[type=checkbox],.frm .mlist label input[type=checkbox]{width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important}.mlist label{grid-template-columns:20px minmax(0,1fr)}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
