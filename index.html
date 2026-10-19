@@ -560,6 +560,12 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .chkl .mlist label.sc:hover{border-color:var(--teal)}
 .tools.chkwrap{display:block}
 .pbar{margin-top:10px}.pbar .btn{margin-inline-start:4px}
+/* fix: checkboxes inside dropdown lists must not stretch */
+.frm input[type=checkbox],.frm input[type=radio],.mlist input[type=checkbox]{width:20px!important;height:20px;min-width:20px;flex:0 0 20px;margin:2px 0 0;padding:0;accent-color:var(--teal);cursor:pointer}
+.mlist label{display:flex!important;align-items:flex-start;gap:10px;padding:7px 8px;font-size:13.5px;line-height:1.6;border-radius:8px}
+.mlist label>span{flex:1 1 auto;min-width:0}
+.mlist label:has(input:checked){background:var(--teal-l)}
+@media (max-width:600px){.frm input[type=checkbox],.mlist input[type=checkbox]{width:22px!important;height:22px;min-width:22px;flex-basis:22px}.mlist label{font-size:14.5px;padding:9px 8px}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
