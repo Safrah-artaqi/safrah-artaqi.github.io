@@ -566,6 +566,25 @@ table.post input.pin::placeholder{color:#c3ccd5}
 .mlist label>span{flex:1 1 auto;min-width:0}
 .mlist label:has(input:checked){background:var(--teal-l)}
 @media (max-width:600px){.frm input[type=checkbox],.mlist input[type=checkbox]{width:22px!important;height:22px;min-width:22px;flex-basis:22px}.mlist label{font-size:14.5px;padding:9px 8px}}
+/* goals linked to activities */
+.gbox{border:1px solid #cfe5e7;background:#f6fbfb;border-radius:12px;padding:10px 12px}
+.gbh{font-family:var(--fh);font-weight:800;color:var(--teal-d);font-size:14px;margin-bottom:6px}.gbh small{font-family:var(--f);font-weight:500;color:var(--muted);font-size:12px;margin-inline-start:6px}
+.gbl{display:grid;gap:6px}
+.gr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.gr .gt{flex:1 1 280px;min-width:0;font-size:13.5px}.gr .gs{font-size:11.5px;color:var(--muted);margin-top:2px}
+.gach{display:flex;gap:4px;flex-wrap:wrap}
+.gach label{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line2);border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:700;cursor:pointer;background:#fff;color:var(--ink)}
+.frm .gach input[type=radio]{width:16px!important;height:16px;min-width:16px;flex:0 0 16px;margin:0}
+.gach label.full:has(input:checked){background:#e8f5ee;border-color:#23925a;color:#1d6b44}
+.gach label.part:has(input:checked){background:#fdf5df;border-color:#c98a14;color:#8a5a00}
+.gach label.none:has(input:checked){background:#fcecec;border-color:#c94242;color:#a33}
+.pgoals{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px}
+.pg{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;box-shadow:var(--sh1)}
+.pgh{display:flex;align-items:center;gap:6px;padding-bottom:5px;border-bottom:1px dashed var(--line2);margin-bottom:4px}.pgh .mini2{margin-inline-start:auto}
+.pgr{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:12.5px;padding:3px 0}
+.gst{flex:none;font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;background:#f1f4f7;color:var(--muted);white-space:nowrap}
+.gst.full{background:#e8f5ee;color:#1d6b44}.gst.part{background:#fdf5df;color:#8a5a00}.gst.none{background:#fcecec;color:#a33}
+.gcomp{display:inline-block;background:var(--teal-l);color:var(--teal-d);border-radius:999px;padding:0 8px;font-size:11.5px;font-weight:800;margin-inline-end:4px}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -836,7 +855,12 @@ function entriesOf(sid) {
   return [...ind, ...grp].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.ts || 0) - (a.ts || 0));
 }
 function givenSet(sid) { const s = new Set(); entriesOf(sid).forEach(e => (e.acts || []).forEach(a => s.add(a))); return s; }
-function goalsDone(sid) { const m = {}; entriesOf(sid).forEach(e => (e.goals || []).forEach(g => { if (e.ach === 'full') m[g] = 'full'; else if (!m[g]) m[g] = e.ach || 'part'; })); return m; }
+const ARANK = {full: 3, part: 2, none: 1};
+function goalsDone(sid) { const m = {}; entriesOf(sid).forEach(e => (e.goals || []).forEach(g => { const a = (e.gach && e.gach[g]) || e.ach || 'part'; if (!m[g] || ARANK[a] > ARANK[m[g]]) m[g] = a; })); return m; }
+function planGoals(s) { const gd = goalsDone(s.id); return KEYS.map(k => { const lv = startLv(pctOf(s, k)); const gs = (S.cfg.goals || []).filter(g => g.c === k && ((g.d || 1) >= lv || gd[g.id])); return {k, gs: gs.map(g => ({g, a: gd[g.id] || ''}))}; }); }
+const gCount = (s, k) => { const x = planGoals(s).find(y => y.k === k); return x ? `${x.gs.filter(y => y.a === 'full').length} / ${x.gs.length}` : '—'; };
+const gStat = a => a === 'full' ? '<span class="gst full">✓ تحقّق</span>' : a === 'part' ? '<span class="gst part">◐ جزئيًّا</span>' : a === 'none' ? '<span class="gst none">✗ لم يتحقّق</span>' : '<span class="gst">○ لم يُقَس</span>';
+const goalsTbl = s => `<table><tr><th class="l" style="width:18%">الكفاية</th><th class="l">الهدف</th><th>المستوى</th><th>الحالة</th></tr>${planGoals(s).map(x => x.gs.map((y, i) => `<tr>${i === 0 ? `<td class="l" rowspan="${x.gs.length}"><b>${COMP[x.k]}</b></td>` : ''}<td class="l">${esc(y.g.t)}</td><td>${STARS[y.g.d] || ''}</td><td>${y.a ? (y.a === 'full' ? '<b style="color:#1d7a4a">✓ تحقّق</b>' : y.a === 'part' ? '<b style="color:#9a6a00">◐ جزئيًّا</b>' : '<b style="color:#c94242">✗ لم يتحقّق</b>') : '—'}</td></tr>`).join('')).join('')}</table>`;
 function attStats(sid, type) {
   const r = {P: 0, A: 0, E: 0, L: 0, n: 0};
   Object.values(S.att).forEach(d => { if (type && d.type !== type) return; const c = (d.marks || {})[sid]; if (c) { r[c] = (r[c] || 0) + 1; r.n++; } });
@@ -858,6 +882,25 @@ function chkList(name, list, sel, title) { sel = new Set(sel || []); const n = l
   return `<details class="msel chkl" data-ms="${name}" open><summary>${n}</summary><div class="chh"><b>${title || 'الطلاب'}</b><span class="cnt">${n} من ${list.length} محدّد</span><span class="mall"><button type="button" data-msall="1">✔ تحديد الكل</button><button type="button" data-msall="0">✕ إلغاء التحديد</button></span></div><div class="mlist">${
     list.map(s => `<label class="sc${sel.has(s.id) ? ' on' : ''}"><input type="checkbox" value="${esc(s.id)}"${sel.has(s.id) ? ' checked' : ''}><span class="nm2">${esc(s.name)}</span><span class="meta2">${esc(s.cls)} · ${lvStr(s)}</span></label>`).join('') || '<div class="empty">لا يوجد طلاب في هذه الفئة.</div>'}</div></details>`; }
 const mselVal = name => $$(`details[data-ms="${name}"] .mlist input:checked`).map(i => i.value);
+const AR_STOP = new Set(['علي', 'الي', 'عن', 'من', 'في', 'مع', 'بين', 'ذكر', 'حول']);
+function arTok(t) { t = String(t || '').replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+  const out = new Set(); t.split(/[^\u0621-\u064A]+/).forEach(x => { if (!x) return; for (const p of ['وال', 'بال', 'لل', 'ال', 'و']) if (x.startsWith(p) && x.length - p.length >= 3) { x = x.slice(p.length); break; } if (x.length >= 3 && !AR_STOP.has(x)) out.add(x.slice(0, 4)); }); return out; }
+const _gl = new Map();
+function goalsOfAct(key) { const a = actOf(key); if (!a) return []; const ck = key + '|' + (S.cfg.goals || []).length; if (_gl.has(ck)) return _gl.get(ck);
+  const aw = arTok(a.s + ' ' + a.t), gs = (S.cfg.goals || []).filter(g => g.c === a.c);
+  const sc = gs.map(g => { let o = 0; arTok(g.t).forEach(w => { if (aw.has(w)) o++; }); return {g, o, v: o * 3 - Math.abs((g.d || 2) - a.d) * 2}; }).sort((x, y) => y.v - x.v);
+  const res = sc.length ? [sc[0].g.id] : []; if (sc[1] && sc[1].o >= 2 && sc[1].v >= sc[0].v - 1) res.push(sc[1].g.id);
+  _gl.set(ck, res); return res; }
+const GACH = [['full', '✓ تحقّق'], ['part', '◐ جزئيًّا'], ['none', '✗ لم يتحقّق']];
+function renderGBox(pref) { const box = $('#' + pref + 'GBox'); if (!box) return; const prev = {};
+  box.querySelectorAll('.gr').forEach(r => { const c = r.querySelector('input:checked'); if (c) prev[r.dataset.g] = c.value; });
+  const keys = mselVal(pref + 'Acts'), m = new Map(); keys.forEach(k => goalsOfAct(k).forEach(g => { if (!m.has(g)) m.set(g, []); m.get(g).push(k); }));
+  const def = ($('#' + pref + 'Ach') || {}).value || 'full';
+  box.querySelector('.gbl').innerHTML = m.size ? [...m.entries()].map(([g, ks]) => { const G = goalOf(g) || {}; const v = prev[g] || def;
+    return `<div class="gr" data-g="${esc(g)}"><div class="gt"><span class="gcomp">${ICON[G.c] || ''} ${COMP[G.c] || ''}</span> <b>${esc(G.t || g)}</b> ${G.d ? '<small>' + STARS[G.d] + '</small>' : ''}<div class="gs">مرتبط بالنشاط: ${ks.map(k => `<span class="pill a">${esc(actLabel(k))}</span>`).join('')}</div></div>
+    <div class="gach">${GACH.map(([k, t]) => `<label class="${k}"><input type="radio" name="ga_${pref}_${esc(g)}" value="${k}"${v === k ? ' checked' : ''}>${t}</label>`).join('')}</div></div>`; }).join('')
+    : '<div class="mini2">اختر الأنشطة التي أُعطيت أولًا، فتظهر هنا أهداف الخطة المرتبطة بها لتحدّد مدى تحقّق كلٍّ منها.</div>'; }
+const gboxHtml = pref => `<div class="wide gbox" id="${pref}GBox" style="grid-column:1/-1"><div class="gbh">🎯 الأهداف المرتبطة بالأنشطة المختارة <small>تُربط تلقائيًّا بحسب كفاية النشاط ومهارته — حدّد مدى تحقّق كل هدف</small></div><div class="gbl"><div class="mini2">اختر الأنشطة التي أُعطيت أولًا، فتظهر هنا أهداف الخطة المرتبطة بها لتحدّد مدى تحقّق كلٍّ منها.</div></div></div>`;
 function goalGroups(s) {
   const order = s ? [...weak(s), ...KEYS.filter(k => !weak(s).includes(k)), 'G'] : [...KEYS, 'G'];
   return order.map(c => ({label: ICON[c] + ' ' + COMP[c] + (s && c !== 'G' ? ' – مستواه ' + STARS[startLv(pctOf(s, c))] : ''),
@@ -998,8 +1041,9 @@ function entryForm(pref, s, book, bank, given, extra) {
   <label>المعلم المتابع${tSelect(pref + 'T', me)}</label>
   <label>مدى التحقّق<select id="${pref}Ach"><option value="">—</option>${Object.entries(ACH).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
   <label>درجة الأداء (من ١٠)<input type="number" id="${pref}Score" min="0" max="10" step="0.5"></label>
-  <label class="wide">الأهداف ${msel(pref + 'Goals', goalGroups(s), [], 'اختر هدفًا أو أكثر من القائمة')}</label>
   <label class="wide">الأنشطة التي أُعطيت ${msel(pref + 'Acts', [...actGroups(book, s, given), ...(bank ? actGroups(bank, s, given).map(g => Object.assign(g, {label: g.label + ' (' + BOOKN[bank] + ')'})) : [])], [], 'اختر نشاطًا أو أكثر من ' + BOOKN[book])}</label>
+  ${gboxHtml(pref)}
+  <label class="wide">أهداف إضافية (اختياري) ${msel(pref + 'Goals', goalGroups(s), [], 'اختر هدفًا آخر من القائمة')}</label>
   ${extra || ''}
   ${notesBlock(pref)}
   <div><button class="btn" type="button" id="${pref}Save">💾 حفظ المتابعة</button></div></div>`;
@@ -1018,13 +1062,16 @@ function vInd() {
   const c = catOf(s.total), book = bookOf(s), bank = bankOf(s), given = givenSet(s.id), acts = D.books[book] || [];
   const rows = KEYS.map(k => { const p = pctOf(s, k), d = startLv(p), ka = acts.filter(a => a.c === k), g = ka.filter(a => given.has(book + ':' + a.n)).length;
     const next = ka.filter(a => a.d >= d && !given.has(book + ':' + a.n)).slice(0, 3).map(a => `<span class="pill a" title="${esc(a.t)}">${a.n} ${STARS[a.d]}</span>`).join('');
-    return `<tr><td class="nm">${ICON[k]} ${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(p, 0)}%</td><td>${stChip(p)}</td><td>${g} / ${ka.length}</td><td><div class="prog"><i style="width:${ka.length ? g / ka.length * 100 : 0}%"></i></div></td><td class="l">${next || '<span class="mini2">أنجز أنشطة القسم ✓</span>'}</td></tr>`; }).join('');
+    return `<tr><td class="nm">${ICON[k]} ${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(p, 0)}%</td><td>${stChip(p)}</td><td>${g} / ${ka.length}</td><td><div class="prog"><i style="width:${ka.length ? g / ka.length * 100 : 0}%"></i></div></td><td><b>${gCount(s, k)}</b></td><td class="l">${next || '<span class="mini2">أنجز أنشطة القسم ✓</span>'}</td></tr>`; }).join('');
   return bar + `<div class="pf"><div class="pcard"><h2>${esc(s.name)}</h2><div class="sub">${esc(clsName(s.cls))} – الحلقة ${esc(s.halqa || halqaOf(s.cls))} · ${catChip(c)} ${CATN[c]} (${CATR[c]}) · النسبة القبلية ${fmt(s.total)}% · ${esc(s.reg || '')}</div>
   <div class="sub">الكتاب: <b>${BOOKN[book]}</b>${bank ? ' + ' + BOOKN[bank] : ''} · المعلم: <b>${esc(teacherOfCls(s.cls).map(t => t.name).join('، ') || '—')}</b></div></div>
   <div class="ring">${ring([...given].filter(x => x.startsWith(book + ':')).length / (acts.length || 60) * 100, 86)}<div class="rt"><span>الأنشطة المنجزة: <b>${[...given].filter(x => x.startsWith(book + ':')).length} / ${acts.length}</b></span><span>حضور حصة البرنامج: <b>${attPct(attStats(s.id, 'ses').pct)}</b></span><span>حضور الفسحة: <b>${attPct(attStats(s.id, 'brk').pct)}</b></span></div></div></div>
   <div class="tools pbar"><span class="mini2">🖨️ الطباعة (PDF):</span>${pdfBtn('ind1', 'خطة هذا الطالب')}${pdfBtn('indAll', 'خطط جميع الطلاب في القائمة (' + filtered().length + ')', '')}</div>
   <h2 class="sec">🎯 الخطة الفردية بحسب مستوى المهارات <small>يبدأ الطالب في كل كفاية من مستواه ثم يتدرّج صعودًا</small></h2>
-  <div class="tw"><table class="compt"><thead><tr><th class="nm">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>الأنشطة المنجزة</th><th>التقدّم</th><th class="nm">الأنشطة المقترحة التالية</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="tw"><table class="compt"><thead><tr><th class="nm">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>الأنشطة المنجزة</th><th>التقدّم</th><th>الأهداف المتحقّقة</th><th class="nm">الأنشطة المقترحة التالية</th></tr></thead><tbody>${rows}</tbody></table></div>
+  ${(() => { const P = planGoals(s); const tot = P.reduce((a, x) => a + x.gs.length, 0), done = P.reduce((a, x) => a + x.gs.filter(y => y.a === 'full').length, 0);
+    return `<h2 class="sec">🎯 أهداف الخطة الفردية <small>أهداف كل كفاية من مستوى بدء الطالب فما فوق — تتحدّث تلقائيًّا من الأنشطة المسجّلة في الخطة الفردية وخطط الفئات · المتحقّق ${done} من ${tot}</small></h2>
+    <div class="pgoals">${P.map(x => `<div class="pg"><div class="pgh">${ICON[x.k]} <b>${COMP[x.k]}</b> <span class="mini2">${x.gs.filter(y => y.a === 'full').length} / ${x.gs.length}</span></div>${x.gs.map(y => `<div class="pgr ${y.a}"><span>${esc(y.g.t)} <small>${STARS[y.g.d] || ''}</small></span>${gStat(y.a)}</div>`).join('') || '<div class="mini2">—</div>'}</div>`).join('')}</div>`; })()}
   <div class="card o" style="margin-top:14px"><div class="ch"><h3>✏️ تسجيل متابعة جديدة للخطة الفردية</h3><small>الأهداف والأنشطة المظلّلة بالأخضر موافقة لمستواه</small></div><div class="cb">${entryForm('i', s, book, bank, given)}</div></div>
   <h2 class="sec">🗂️ سجل متابعة الطالب <small>يشمل متابعات خطة الفئة التي شارك فيها</small></h2>${logTable(entriesOf(s.id), false)}`;
 }
@@ -1044,8 +1091,9 @@ function vGrp() {
   <label>التاريخ<input type="date" id="gDate" value="${today()}"></label><label>المعلم المتابع${tSelect('gT', me)}</label>
   <label>مدى التحقّق<select id="gAch"><option value="">—</option>${Object.entries(ACH).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
   ${studChecks}
-  <label class="wide">الأهداف ${msel('gGoals', goalGroups(null), [], 'اختر هدفًا أو أكثر')}</label>
   <label class="wide">الأنشطة التي أُعطيت ${msel('gActs', actG, [], 'اختر نشاطًا أو أكثر')}</label>
+  ${gboxHtml('g')}
+  <label class="wide">أهداف إضافية (اختياري) ${msel('gGoals', goalGroups(null), [], 'اختر هدفًا آخر')}</label>
   ${notesBlock('g')}<div><button class="btn" type="button" id="gSave">💾 حفظ متابعة الفئة</button></div></div></div></div>
   <h2 class="sec">📈 تقدّم طلاب الفئة</h2><div class="tw"><table><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>القبلي</th><th>مستوى البدء (L S W R T)</th><th>الأنشطة</th><th>أهداف متحقّقة</th><th>المتابعات</th><th>آخر متابعة</th><th>حضور الحصة</th></tr></thead><tbody>${prog || '<tr><td colspan="9" class="empty">لا يوجد طلاب في هذه الفئة.</td></tr>'}</tbody></table></div>
   <h2 class="sec">🗂️ سجل متابعة خطة الفئة</h2>${logTable(Object.values(S.glogs).filter(g => +g.cat === c).sort((a, b) => (b.date || '').localeCompare(a.date || '')), true)}`;
@@ -1113,7 +1161,7 @@ const RP_CSS = `.rp{width:794px;margin:0 auto;background:#fff;color:#1d2b3a;font
 function reportStudent(s) {
   const c = catOf(s.total), book = bookOf(s), acts = D.books[book] || [], given = givenSet(s.id), ents = entriesOf(s.id), gd = goalsDone(s.id), as = attStats(s.id, 'ses'), ab = attStats(s.id, 'brk'), cf = cfOf(s.id), rn = S.rn[s.id] || {};
   const gb = [...given].filter(x => x.startsWith(book + ':')).length;
-  const compRows = KEYS.map(k => { const ka = acts.filter(a => a.c === k), g = ka.filter(a => given.has(book + ':' + a.n)); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(pctOf(s, k), 0)}%</td><td>${stChip(pctOf(s, k))}</td><td>${g.length} / ${ka.length}</td><td class="l">${g.map(a => `<span class="pill a">${a.n} ${STARS[a.d]}</span>`).join('') || '—'}</td></tr>`; }).join('');
+  const compRows = KEYS.map(k => { const ka = acts.filter(a => a.c === k), g = ka.filter(a => given.has(book + ':' + a.n)); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(pctOf(s, k), 0)}%</td><td>${stChip(pctOf(s, k))}</td><td>${g.length} / ${ka.length}</td><td>${gCount(s, k)}</td><td class="l">${g.map(a => `<span class="pill a">${a.n} ${STARS[a.d]}</span>`).join('') || '—'}</td></tr>`; }).join('');
   const goals = Object.entries(gd).map(([g, a]) => `<span class="pill ${a === 'full' ? 'g' : ''}">${esc((goalOf(g) || {}).t || g)} – ${ACH[a] || ''}</span>`).join('');
   const lastCf = cf[0]; const cfRow = lastCf ? lastCf.rows[s.id] : null;
   const notes = [...(rn.sel || []).filter(t => !inList('rrec', t)), ...(rn.x ? [rn.x] : [])];
@@ -1126,8 +1174,8 @@ function reportStudent(s) {
   <div class="two"><div><h2>نتائج الاختبار القبلي</h2>${bars(KEYS.map(k => ({n: COMP[k], p: pctOf(s, k)})))}</div><div><h2>انتظام الحضور</h2>${bars([{n: 'حصة البرنامج', p: as.pct, c: '#0f7a83', lab: as.n ? attPct(as.pct) : '—'}, {n: 'الفسحة', p: ab.pct, c: '#3d6fd6', lab: ab.n ? attPct(ab.pct) : '—'}])}
   <table><tr><th></th><th>حاضر</th><th>غائب</th><th>بعذر</th><th>متأخر</th></tr><tr><td class="l">الحصة</td><td>${as.P}</td><td>${as.A}</td><td>${as.E}</td><td>${as.L}</td></tr><tr><td class="l">الفسحة</td><td>${ab.P}</td><td>${ab.A}</td><td>${ab.E}</td><td>${ab.L}</td></tr></table></div></div>
   ${hasPost(s) ? `<h2>مقارنة الاختبارين القبلي والبعدي</h2><table><tr><th class="l">الكفاية</th><th>القبلي</th><th>البعدي</th><th>التغيّر</th><th>المستوى قبل ← بعد</th></tr>${KEYS.map(k => { const a = pctOf(s, k), b = postPct(s, k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(a, 0)}%</td><td>${b == null ? '—' : fmt(b, 0) + '%'}</td><td>${dlt(a == null || b == null ? null : b - a)}</td><td>${STARS[startLv(a)]} ← ${b == null ? '—' : STARS[startLv(b)]}</td></tr>`; }).join('')}<tr><td class="l"><b>المجموع</b></td><td><b>${fmt(s.total)}%</b></td><td><b>${fmt(postTot(s))}%</b></td><td>${dlt(postTot(s) - s.total)}</td><td>${CATS[catOf(s.total)]} ← ${CATS[catOf(postTot(s))]}</td></tr></table>` : ''}
-  <h2>الخطة الفردية: الأنشطة المنجزة بحسب الكفاية ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>القبلي</th><th>النسبة</th><th>مستوى البدء</th><th>المنجز</th><th class="l">أرقام الأنشطة</th></tr>${compRows}</table>
-  <h2>الأهداف</h2><div>${goals || '<span class="pill">لم تُسجَّل أهداف بعد</span>'}</div>
+  <h2>الخطة الفردية: الأنشطة المنجزة بحسب الكفاية ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>القبلي</th><th>النسبة</th><th>مستوى البدء</th><th>المنجز</th><th>الأهداف المتحقّقة</th><th class="l">أرقام الأنشطة</th></tr>${compRows}</table>
+  <h2>أهداف الخطة ومدى تحقّقها</h2>${goalsTbl(s)}
   ${lastCf && cfRow ? `<h2>المتابعة الصفية (آخر متابعة ${esc(lastCf.date)} – ${esc(tName(lastCf.tid))})</h2><table><tr>${IND.map(x => `<th>${x}</th>`).join('')}<th>التقدّم</th></tr><tr>${IND.map((_, i) => `<td>${(cfRow.ind || [])[i] || '—'}</td>`).join('')}<td>${PROG[cfRow.prog] || '—'}</td></tr></table>${(cfRow.nsel || []).length || cfRow.note ? `<div class="mini2">ملاحظات معلم الفصل: ${esc([...(cfRow.nsel || []), cfRow.note || ''].filter(Boolean).join('؛ '))}</div>` : ''}` : ''}
   <h2>آخر المتابعات</h2><table><tr><th>التاريخ</th><th>المعلم</th><th class="l">الأنشطة</th><th>التحقّق</th><th class="l">ملاحظة</th></tr>${ents.slice(0, 6).map(e => `<tr><td>${esc(e.date)}</td><td>${esc(tName(e.tid))}</td><td class="l">${(e.acts || []).map(a => `<span class="pill a">${esc(actLabel(a))}</span>`).join('')}</td><td>${ACH[e.ach] || '—'}</td><td class="l">${esc(noteTxt(e))}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}</table>
   <div class="two"><div><h2>ملاحظات المعلم</h2><div class="note">${notes.length ? '<ul>' + notes.map(n => `<li>${esc(n)}</li>`).join('') + '</ul>' : '—'}</div></div><div><h2>التوصيات</h2><div class="note rec">${recs.length ? '<ul>' + recs.map(n => `<li>${esc(n)}</li>`).join('') + '</ul>' : '—'}</div></div></div>
@@ -1327,13 +1375,13 @@ const docSig = (t) => `<div class="sig"><span>المعلم المتابع: ${esc
 function planDoc(s) {
   const c = catOf(s.total), book = bookOf(s), acts = D.books[book] || [], given = givenSet(s.id), PP = planPeriods(s), gd = goalsDone(s.id), ents = entriesOf(s.id);
   const pOf = k => +Object.keys(PP).find(p => PP[p].includes(k));
-  const comp = KEYS.map(k => { const p = pctOf(s, k), ka = acts.filter(a => a.c === k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(p, 0)}%</td><td>${STARS[startLv(p)]} ${DN[startLv(p)]}</td><td>${PERN[pOf(k)].split(' – ')[0]}</td><td>${ka.filter(a => given.has(book + ':' + a.n)).length} / ${ka.length}</td></tr>`; }).join('');
+  const comp = KEYS.map(k => { const p = pctOf(s, k), ka = acts.filter(a => a.c === k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(scOf(s)[k])} / ${MAX[k]}</td><td>${fmt(p, 0)}%</td><td>${STARS[startLv(p)]} ${DN[startLv(p)]}</td><td>${PERN[pOf(k)].split(' – ')[0]}</td><td>${ka.filter(a => given.has(book + ':' + a.n)).length} / ${ka.length}</td><td>${gCount(s, k)}</td></tr>`; }).join('');
   const per = [1, 2, 3, 4].map(p => { const ks = PP[p].flatMap(k => acts.filter(a => a.c === k && a.d >= startLv(pctOf(s, k)))); return `<tr><td class="l"><b>${PERN[p].split(' – ')[0]}</b><br><small>${PERN[p].split(' – ')[1]}</small></td><td class="l">${PP[p].map(k => COMP[k]).join('، ')}</td><td class="l pills2">${ks.map(a => `<span class="${given.has(book + ':' + a.n) ? 'ok' : ''}">${given.has(book + ':' + a.n) ? '✓ ' : ''}${a.n} ${STARS[a.d]}</span>`).join('') || '—'}</td></tr>`; }).join('');
   const goals = Object.entries(gd).map(([g, a]) => `<span class="pill ${a === 'full' ? 'g' : ''}">${esc((goalOf(g) || {}).t || g)} – ${ACH[a] || ''}</span>`).join('');
   return docHead('الخطة الفردية للطالب') + `<div class="info"><span>اسم الطالب: <b>${esc(s.name)}</b></span><span>الصف: <b>${esc(clsName(s.cls))}</b></span><span>الفئة: <b>${CATN[c]}</b></span><span>النسبة القبلية: <b>${fmt(s.total)}%</b></span><span>الكتاب: <b>${BOOKN[book]}</b></span><span>التاريخ: <b>${today()}</b></span></div>
-  <h2>مستوى المهارات ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>فترة التركيز</th><th>المنجز</th></tr>${comp}</table>
+  <h2>مستوى المهارات ومستوى البدء</h2><table><tr><th class="l">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>مستوى البدء</th><th>فترة التركيز</th><th>الأنشطة المنجزة</th><th>الأهداف المتحقّقة</th></tr>${comp}</table>
   <h2>خطة الفترات والأنشطة المقرّرة</h2><p class="lg2">تبدأ الخطة بالكفاية الأضعف، ويتدرّج الطالب من مستوى بدئه صعودًا. الأنشطة المعلَّمة بـ ✓ أُعطيت للطالب.</p><table><tr><th class="l" style="width:16%">الفترة</th><th class="l" style="width:18%">الكفاية</th><th class="l">أرقام الأنشطة ومستواها</th></tr>${per}</table>
-  <h2>الأهداف</h2><div>${goals || '<span class="pill">لم تُسجَّل أهداف بعد</span>'}</div>
+  <h2>أهداف الخطة ومدى تحقّقها</h2>${goalsTbl(s)}
   <h2>سجل المتابعة</h2><table><tr><th>التاريخ</th><th>المعلم</th><th class="l">الأنشطة</th><th>التحقّق</th><th class="l">ملاحظات</th></tr>${ents.slice(0, 10).map(e => `<tr><td>${esc(e.date)}</td><td>${esc(tName(e.tid))}</td><td class="l pills2">${(e.acts || []).map(a => `<span>${esc(actLabel(a))}</span>`).join('')}</td><td>${ACH[e.ach] || '—'}</td><td class="l">${esc(noteTxt(e))}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}</table>`
   + docSig(teacherOfCls(s.cls).map(t => t.name).join('، '));
 }
@@ -1471,8 +1519,8 @@ const GUIDE = [
   ['☰', 'القائمة العلوية', ['زر المربّع ذي الخطوط الثلاث في زاوية الشريط العلوي يفتح القائمة: الصفحة الرئيسية، دليل الاستخدام، الإعدادات.', 'يُظهر الشريط العلوي مسار مكانك: 🏠 ← الصف ← القسم، وتستطيع الضغط على أيّ جزء منه للرجوع.']],
   ['👨‍🏫', 'اختيار المعلم والصفوف', ['اختر اسمك من «المعلم المتابع» في الشريط العلوي، فتظهر في الصفحة الرئيسية صفوفك فقط، كل صف في مستطيل يبيّن عدد طلابه وفئاتهم ونسبة الإنجاز والحضور.', 'اختيار «الكل (المنسق)» يُظهر جميع الصفوف.', 'اضغط على مستطيل الصف للدخول إليه.']],
   ['🏫', 'داخل الصف', ['تظهر خانات الصف: الخطط الفردية، خطط الفئات، طباعة الأنشطة، الحضور، المتابعة الصفية، التقارير، الطلاب.', 'كل خانة تعمل على طلاب هذا الصف فقط، وتظهر فيها فئات الصف الموجودة فقط.']],
-  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، مدى التحقّق، الدرجة، ثم اختر الأهداف والأنشطة التي أُعطيت والملاحظات والإجراءات والمقترحات من القوائم المنسدلة، واضغط «حفظ المتابعة».', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
-  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'سجّل الأهداف والأنشطة واضغط «حفظ متابعة الفئة»؛ تُضاف الأنشطة تلقائيًّا إلى سجلّ كل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
+  ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، مدى التحقّق، الدرجة، ثم اختر «الأنشطة التي أُعطيت»؛ فتظهر تلقائيًّا «الأهداف المرتبطة» بكفاية كل نشاط ومهارته، وحدّد لكل هدف: تحقّق / جزئيًّا / لم يتحقّق. ثم اختر الملاحظات والإجراءات والمقترحات واضغط «حفظ المتابعة».', 'قسم «🎯 أهداف الخطة الفردية» يعرض أهداف كل كفاية من مستوى بدء الطالب وحالة كل هدف، ويتحدّث تلقائيًّا من الخطة الفردية وخطط الفئات معًا، ويظهر عدد الأهداف المتحقّقة لكل كفاية في جدول الخطة والتقارير', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
+  ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'اختر الأنشطة التي أُعطيت فتظهر أهدافها المرتبطة، وحدّد مدى تحقّق كل هدف، ثم اضغط «حفظ متابعة الفئة»؛ تُضاف الأنشطة والأهداف المتحقّقة إلى الخطة الفردية لكل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
   ['🖨️', 'طباعة الأنشطة', ['«بحسب الطالب والفترة»: اختر الفئة فتظهر أسماء طلابها، ثم اضغط المربع الصغير بجانب اسم كل طالب تريده، فتظهر الأنشطة المطلوبة لهم في الفترة الحالية مباشرة. حدّد النشاط، ويُطبع بعدد الطلاب المختارين وباسم كل طالب.', 'يمكن الطباعة أيضًا «بحسب التاريخ والفئة» أو «اختيار يدوي» لأيّ نشاط من كتب الفئات.']],
   ['🗓️', 'الحضور', ['اختر «حصة البرنامج» (يوم في الأسبوع) أو «الفسحة» (يومان في الأسبوع) والتاريخ.', 'اضغط على خانة الطالب للتنقّل بين: حاضر، غائب، بعذر، متأخر. زر «الكل حاضر» يسجّل الجميع دفعة واحدة.', 'للتقرير الشهري: اختر «الشهر» ثم اضغط «📄 الحضور والغياب الشهري PDF»؛ يظهر لكل طالب حضوره في الحصص والفسحات خلال الشهر والمجاميع والنسبة.']],
   ['🏫', 'المتابعة الصفية', ['اختر التاريخ وفترة المتابعة، ثم قيّم كل طالب في المؤشرات (١–٤) وحدّد الدعم المقدَّم والتقدّم وملاحظات معلم الفصل.', 'في الأسفل: ملاحظات عامة، ثم التوصيات، ثم إجراءات معلم البرنامج، واضغط «حفظ المتابعة الصفية».']],
@@ -1499,7 +1547,7 @@ async function saveFile(name, data, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: type || 'application/octet-stream'})); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); return true;
 }
 function collectEntry(pref) {
-  return {id: uid(), ts: Date.now(), date: $('#' + pref + 'Date').value || today(), tid: $('#' + pref + 'T').value, goals: mselVal(pref + 'Goals'), acts: mselVal(pref + 'Acts'), ach: $('#' + pref + 'Ach').value, score: $('#' + pref + 'Score') ? ($('#' + pref + 'Score').value === '' ? null : +$('#' + pref + 'Score').value) : null, note: $('#' + pref + 'Note').value.trim(), nSel: mselVal(pref + 'N'), pSel: mselVal(pref + 'P'), rSel: mselVal(pref + 'R')};
+  return {id: uid(), ts: Date.now(), date: $('#' + pref + 'Date').value || today(), tid: $('#' + pref + 'T').value, goals: [...new Set([...$$('#' + pref + 'GBox .gr').map(r => r.dataset.g), ...mselVal(pref + 'Goals')])], gach: Object.fromEntries($$('#' + pref + 'GBox .gr').map(r => [r.dataset.g, (r.querySelector('input:checked') || {}).value || 'full'])), acts: mselVal(pref + 'Acts'), ach: $('#' + pref + 'Ach').value, score: $('#' + pref + 'Score') ? ($('#' + pref + 'Score').value === '' ? null : +$('#' + pref + 'Score').value) : null, note: $('#' + pref + 'Note').value.trim(), nSel: mselVal(pref + 'N'), pSel: mselVal(pref + 'P'), rSel: mselVal(pref + 'R')};
 }
 document.addEventListener('click', async ev => {
   if (!ev.target.closest('.menuw')) menu(false);
@@ -1594,7 +1642,8 @@ document.addEventListener('toggle', ev => { if (ev.target.id === 'roomsBox') UI.
 document.addEventListener('input', ev => { if (ev.target.id === 'lookC') { const L = curLook(); L.c = ev.target.value; UI.lookDraft = L; applyLook(L); } });
 document.addEventListener('change', async ev => {
   const t = ev.target;
-  if (t.closest('details.msel')) { updMsel(t.closest('details.msel')); return; }
+  if (t.closest('details.msel')) { const dm = t.closest('details.msel'); updMsel(dm); if (dm.dataset.ms === 'iActs') renderGBox('i'); if (dm.dataset.ms === 'gActs') renderGBox('g'); return; }
+  if (t.id === 'iAch' || t.id === 'gAch') { const pf = t.id[0]; $$('#' + pf + 'GBox .gr').forEach(r => { const x = r.querySelector(`input[value="${t.value || 'full'}"]`); if (x) x.checked = true; }); return; }
   const id = t.id;
   if (id === 'attM') { UI.attM = t.value; return; }
   if (id === 'meSel') { me = t.value; try { localStorage.setItem(LK + '-me', me); } catch (e) {} UI.cfT = me; UI.room = ''; tab = tab === 'classes' ? 'classes' : 'home'; UI.fCls = ''; UI.attCls = ''; UI.rCls = ''; UI.cfCls = ''; UI.pStu = []; renderMeta(); render(); return; }
