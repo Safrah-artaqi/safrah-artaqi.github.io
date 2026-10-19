@@ -631,6 +631,44 @@ table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.s
 @media (prefers-reduced-motion:reduce){.bellb .bi{animation:none!important}}
 @media (max-width:600px){.bellw{position:static}.npanel{position:absolute;top:calc(100% + 6px);left:0;right:0;inset-inline:0;width:auto;max-height:65vh}}
 @media (max-width:600px){.navbar .menuw{order:0}.navbar .curT{order:1}.navbar .bellw{order:2;margin-inline-start:auto}.navbar .meta{order:3}}
+/* ===== professional layout: compact header, drawer, today ===== */
+.hdr img{height:50px}.top{margin-top:6px}.title{padding:10px 16px}.title h1{font-size:clamp(18px,2vw,23px)}.title small{font-size:12.5px}.sum{padding:8px 14px}
+.dback{position:fixed;inset:0;background:rgba(10,20,30,.42);z-index:60;backdrop-filter:blur(2px);animation:fadeIn .18s ease}
+.dback[hidden]{display:none}
+.drawer{position:fixed;top:0;bottom:0;right:0;width:min(86vw,320px);background:#fff;z-index:61;box-shadow:-12px 0 32px rgba(16,24,40,.22);display:flex;flex-direction:column;transform:translateX(105%);transition:transform .25s cubic-bezier(.2,.8,.2,1);font-family:var(--f);color:var(--ink);visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+body.dopen{overflow:hidden}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.dhead{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff}
+.dlogo{width:46px;height:46px;flex:none;background:#fff;border-radius:50%;padding:2px}.logo.sm{width:100%;height:100%}
+.dtt{display:grid;flex:1;min-width:0}.dtt b{font-family:var(--fh);font-size:17px}.dtt small{font-size:11.5px;opacity:.85}
+.dclose{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font-size:16px;cursor:pointer}
+.duser{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--teal-l);border-bottom:1px solid var(--line)}
+.duser .av{width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:18px;box-shadow:var(--sh1)}
+.duser b{display:block;font-family:var(--fh);font-size:14px;color:var(--teal-d)}.duser small{color:var(--muted);font-size:11.5px}
+.dnav{flex:1;overflow:auto;padding:6px 8px 10px}
+.dg{padding:6px 0;border-bottom:1px solid var(--line)}.dg:last-child{border-bottom:0}
+.dgh{font-size:11px;font-weight:800;color:var(--muted);padding:6px 10px 4px;letter-spacing:.2px}
+.ditem{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:10px;padding:8px 10px;font:600 14px var(--f);color:var(--ink);cursor:pointer;text-align:start}
+.ditem:hover{background:var(--soft)}
+.ditem.on{background:var(--teal-l);color:var(--teal-d);font-weight:800;box-shadow:inset -3px 0 0 var(--teal)}
+.ditem .dic{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:var(--soft);font-size:15px;flex:none}
+.ditem.on .dic{background:#fff}
+.ditem .dn{flex:1;display:flex;align-items:center;gap:6px}.ditem small{color:var(--muted);font-weight:600;margin-inline-start:auto;font-size:11.5px}
+.dbadge{background:#d64545;color:#fff;border-radius:999px;padding:0 7px;font-size:11px;font-weight:800;margin-inline-start:auto}
+.dfoot{padding:10px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+/* today card */
+.today{margin-top:12px;background:#fff;border:1px solid var(--line);border-inline-start:6px solid var(--teal);border-radius:16px;box-shadow:var(--sh1);overflow:hidden}
+.today .th{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,#fff,var(--teal-l));border-bottom:1px solid var(--line)}
+.today .ti2{font-size:22px}.today .th b{display:block;font-family:var(--fh);font-size:17px;color:var(--teal-d)}.today .th small{color:var(--muted)}
+.today .th .sp{margin-inline-start:auto}
+.trow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 16px;border-bottom:1px dashed var(--line2)}.trow:last-child{border-bottom:0}
+.tw1{display:grid;min-width:150px;flex:1 1 180px}.tw1 b{font-family:var(--fh);color:var(--ink)}.tw1 span{font-size:12.5px;color:var(--muted)}
+.tbtns{display:flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}
+.tempty{padding:14px 16px;color:var(--muted);font-weight:600}
+.hbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hbtns .roomsbtn{margin-top:12px;min-height:120px;padding:18px 20px}.hbtns .roomsbtn .rcl{display:none}
+.hbtns .roomsbtn .ri{width:64px;height:64px;font-size:32px}.hbtns .roomsbtn b{font-size:22px}
+@media (max-width:760px){.hbtns{grid-template-columns:1fr}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -643,8 +681,7 @@ table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.s
     </div>
   </div>
   <div class="navbar" id="navbar" hidden>
-    <div class="menuw"><button class="burger" id="burger" type="button" aria-label="قائمة الأقسام" aria-expanded="false" aria-controls="tabs"><i></i><i></i><i></i></button>
-      <nav class="menu" role="tablist" id="tabs" hidden></nav></div>
+    <div class="menuw"><button class="burger" id="burger" type="button" aria-label="القائمة الجانبية" aria-expanded="false" aria-controls="drawer"><i></i><i></i><i></i></button></div>
     <div class="curT" id="curT"></div>
     <div class="meta" id="meta"></div>
     <div class="bellw"><button class="bellb" id="bellB" type="button" aria-label="التنبيهات" aria-expanded="false" aria-controls="bellP"><span class="bi">🔔</span><span class="bcount" id="bellN" hidden></span></button>
@@ -654,6 +691,8 @@ table.sch th.dh2{background:var(--teal-l);color:var(--teal-d);width:84px}table.s
   <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
+<div class="dback" id="dback" hidden></div>
+<aside class="drawer" id="drawer" dir="rtl" lang="ar" aria-label="القائمة الجانبية" aria-hidden="true"></aside>
 <div class="toast" id="toast" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
@@ -1025,7 +1064,7 @@ const MENU = [['home', '🏠 الصفحة الرئيسية'], ['guide', '📘 د
 const TABS = [['sched', '📅 جدول حصص الدعم'], ['post', '📝 الاختبار البعدي'], ['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
 function render() {
   const v = $('#view'); applyLook();
-  $('#tabs').innerHTML = `<div class="mh">القائمة</div>` + MENU.map(([k, n]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}"><span class="ic">${n.split(' ')[0]}</span>${n.split(' ').slice(1).join(' ')}</button>`).join('') + `<div class="mf">جميع الحقوق محفوظة © أ. خالد الحمري</div>`;
+  $('#drawer').innerHTML = drawerHtml();
   const cur = TABS.find(x => x[0] === tab); const inR = UI.room && !GLOBAL_T.includes(tab); const rb = inR ? `<button class="crumb" data-t="classes" type="button">🏫 الصفوف</button><span class="sepc">›</span>` + (tab === 'room' ? '' : `<button class="crumb" data-t="room" type="button">${esc(clsName(UI.room))}</button>`) : '';
   $('#curT').innerHTML = (tab !== 'home' ? `<button class="crumb home" data-t="home" type="button" title="كل الصفوف">🏠</button><span class="sepc">›</span>` : '') + (inR ? rb + (cur ? '<span class="sepc">›</span>' : '') : '') + (cur ? `<span class="ic">${cur[1].split(' ')[0]}</span><b>${cur[1].split(' ').slice(1).join(' ')}</b>` : (tab === 'room' ? `<span class="ic">🏫</span><b>${esc(clsName(UI.room))}</b>` : ''));
   $('#navbar').hidden = !(ready && unlocked); menu(false);
@@ -1040,7 +1079,22 @@ function countUp() { if (countUp.done || !document.querySelector('.hs b[data-cou
 function bell(open) { const p = $('#bellP'), b = $('#bellB'); if (!p) return; p.hidden = !open; b.setAttribute('aria-expanded', String(!!open)); b.classList.toggle('on', !!open); if (open) p.innerHTML = alertsCard(); }
 function renderBell() { const n = $('#bellN'), b = $('#bellB'); if (!n || !ready || !unlocked) return; const A = alertsOf(), c = A.todo.length + A.absent.length + A.nofol.length + A.nocf.length;
   n.hidden = !c; n.textContent = c > 99 ? '99+' : c; b.classList.toggle('has', !!c); if (!$('#bellP').hidden) $('#bellP').innerHTML = alertsCard(); }
-function menu(open) { const m = $('#tabs'), bt = $('#burger'); if (!m) return; m.hidden = !open; bt.setAttribute('aria-expanded', String(!!open)); bt.classList.toggle('on', !!open); }
+function menu(open) { const d = $('#drawer'), bk = $('#dback'), bt = $('#burger'); if (!d) return; open = !!open && ready && unlocked; d.classList.toggle('open', open); d.setAttribute('aria-hidden', String(!open)); bk.hidden = !open; document.body.classList.toggle('dopen', open); if (bt) { bt.setAttribute('aria-expanded', String(open)); bt.classList.toggle('on', open); } }
+function drawerHtml() {
+  if (!ready || !unlocked) return '';
+  const it = (t, ic, n, extra, act) => `<button class="ditem${(act ?? tab === t) ? ' on' : ''}" ${t ? `data-t="${t}"` : ''} ${extra || ''} type="button"><span class="dic">${ic}</span><span class="dn">${n}</span></button>`;
+  const A = alertsOf(), na = A.todo.length + A.absent.length + A.nofol.length + A.nocf.length;
+  const roomT = ROOM_T.filter(x => x[0] !== 'sched');
+  return `<div class="dhead"><div class="dlogo">${LOGO.replace('class="logo"', 'class="logo sm"')}</div><div class="dtt"><b>بالعربية أرتقي</b><small>منصة متابعة الخطط الفردية وخطط الفئات</small></div><button class="dclose" id="dClose" type="button" aria-label="إغلاق">✕</button></div>
+  <div class="duser"><span class="av">👨‍🏫</span><div><b>${meT() ? esc(meT().name) : 'المنسق – جميع الصفوف'}</b><small>${UI.room ? 'الصف الحالي: ' + esc(clsName(UI.room)) : 'لم يُختر صف'}</small></div></div>
+  <nav class="dnav">
+  <div class="dg"><div class="dgh">الرئيسية</div>${it('home', '🏠', 'الصفحة الرئيسية')}${it('dash', '📊', 'لوحة المتابعة')}</div>
+  <div class="dg"><div class="dgh">العمل اليومي</div>${it('sched', '📅', 'جدول الحصص والتحضير', '', tab === 'sched' || tab === 'att')}${it('', '🔔', 'التنبيهات' + (na ? ` <span class="dbadge">${na}</span>` : ''), 'data-bellopen="1"', false)}</div>
+  <div class="dg"><div class="dgh">الصفوف</div>${TCLS().map(c => it('', '🏫', esc(clsName(c)) + ` <small>${ALL().filter(s => s.cls === c).length}</small>`, `data-room="${esc(c)}"`, UI.room === c && tab === 'room')).join('')}${it('classes', '🗂️', 'كل الصفوف')}</div>
+  <div class="dg"><div class="dgh">أقسام ${UI.room ? 'الصف ' + esc(clsName(UI.room)) : 'العمل (كل صفوفي)'}</div>${roomT.map(([k, ic, n]) => it(k, ic, n)).join('')}</div>
+  <div class="dg"><div class="dgh">عام</div>${it('guide', '📘', 'دليل الاستخدام')}${it('set', '⚙️', 'الإعدادات')}</div>
+  </nav><div class="dfoot">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>`;
+}
 function renderMeta() {
   const n = STU().length;
   $('#meta').innerHTML = `<span>العام الدراسي: <b>${esc(S.cfg.year)}</b></span><span>الطلاب: <b>${n}</b></span>
@@ -1085,12 +1139,24 @@ function vClasses() { const cls = TCLS();
   return `<div class="hhead"><h2>🏫 ${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'}</h2><span class="mini2">${cls.length} صفوف · ${meT() ? 'اختر الصف للدخول إلى خططه وأنشطته وتقاريره' : 'اختر اسمك من «المعلم المتابع» لتظهر صفوفك فقط، أو ادخل أي صف'}</span></div>
   <div class="rooms">${cls.map(roomCard).join('') || '<div class="empty">لا صفوف مرتبطة بهذا المعلم — اربطها من ☰ الإعدادات.</div>'}</div>
   <div class="tools" style="margin-top:14px"><button class="btn w sm" data-t="home" type="button">→ الرجوع إلى الصفحة الرئيسية</button></div>`; }
+function todayCard() {
+  const T = today(), wd = new Date(T + 'T12:00:00').getDay(), mine = h => !meT() || h.tid === me;
+  const ses = SCHED().filter(h => h.day === wd && mine(h)).sort((a, b) => a.per - b.per), brk = BRK().filter(b => b.day === wd && mine(b));
+  const st = (type, ids) => { if (!ids.length) return '<span class="gst">لا طلاب</span>'; const a = attState(type, T, ids); return a.done ? `<span class="gst full">✓ حُضّر ${a.p}/${a.n}</span>` : '<span class="gst none">⏳ لم يُحضَّر</span>'; };
+  const rows = [...ses.map(h => { const ids = sesStu(h).map(x => x.id); return `<div class="trow"><div class="tw1"><b>الحصة ${PERW[h.per]}</b><span>${esc(clsName(h.cls))} · ${ids.length} طلاب${meT() ? '' : ' · ' + esc(tName(h.tid))}</span></div>${st('ses', ids)}<div class="tbtns">${ids.length ? `<button class="btn sm" data-schatt="ses|${T}|${h.id}" type="button">🗓️ تحضير</button><button class="btn w sm" data-go="print|${esc(h.cls)}" type="button">🖨️ الأنشطة</button><button class="btn w sm" data-go="ind|${esc(h.cls)}" type="button">📋 المتابعة</button>` : ''}</div></div>`; }),
+    ...brk.map(b => `<div class="trow"><div class="tw1"><b>الفسحة</b><span>${b.day === 0 ? 'الابتدائي' : 'الإعدادي'} · ${b.sids.length} طلاب${meT() ? '' : ' · ' + esc(tName(b.tid))}</span></div>${st('brk', b.sids)}<div class="tbtns"><button class="btn sm" data-schatt="brk|${T}|${b.id}" type="button">🗓️ تحضير</button></div></div>`)];
+  let next = ''; if (!rows.length) { for (let i = 1; i <= 7; i++) { const d = addDays(T, i), w = new Date(d + 'T12:00:00').getDay(), hs = SCHED().filter(h => h.day === w && mine(h)); if (hs.length) { next = `أقرب حصة: ${DAYN[w]} ${+d.slice(8)}/${+d.slice(5, 7)} – الحصة ${PERW[hs[0].per]} (${esc(hs[0].cls)})`; break; } } }
+  return `<div class="today"><div class="th"><span class="ti2">📌</span><div><b>مهام اليوم</b><small>${DAYN[wd]} ${+T.slice(8)}/${+T.slice(5, 7)}/${T.slice(0, 4)}${meT() ? ' · ' + esc(meT().name) : ' · جميع المعلمين'}</small></div><button class="btn w sm sp" data-t="sched" type="button">📅 الجدول الأسبوعي</button></div>
+  ${rows.join('') || `<div class="tempty">لا توجد حصص دعم أو فسحة ${meT() ? 'لك ' : ''}اليوم.${next ? ' ' + next : ''}</div>`}</div>`;
+}
 function vHome() {
   const cls = TCLS(), P = progStats();
   const wkTxt = P.wk ? `الأسبوع ${P.wk} من ١٤ · ${PERN[curPeriod()].split('–')[0].trim()}` : 'حدّد «بداية الخطة» من الإعدادات';
   return `<section class="hero"><div class="hlogo">${LOGO}</div><div class="htx"><h2>برنامج «بالعربية أرتقي»</h2><p class="tag">نتعلّم العربية… ونرتقي خطوةً خطوة</p><p>${ABOUT}</p></div></section>
+  ${todayCard()}
+  <div class="hbtns">
   <button class="roomsbtn" data-t="classes" type="button"><span class="ri">🏫</span><span class="rt2"><b>الصفوف</b><small>${meT() ? 'صفوف ' + esc(meT().name) : 'جميع صفوف البرنامج'} · ${cls.length} صفوف · ${cls.reduce((a, c) => a + ALL().filter(s => s.cls === c).length, 0)} طالبًا</small></span><span class="rcl">${cls.slice(0, 6).map(c => `<span class="pill">${esc(c)}</span>`).join('')}${cls.length > 6 ? '<span class="pill">…</span>' : ''}</span><span class="go">دخول ←</span></button>
-  <button class="roomsbtn sch" data-t="sched" type="button"><span class="ri">📅</span><span class="rt2"><b>جدول حصص الدعم والفسحة</b><small>${meT() ? 'حصص ' + esc(meT().name) + ': ' + SCHED().filter(h => h.tid === me).map(h => DAYN[h.day] + ' (' + PERW[h.per] + ')').join('، ') : SCHED().length + ' حصص أسبوعيًّا + فسحة الأحد والاثنين'} · التحضير والحضور الشهري</small></span><span class="go">فتح ←</span></button>
+  <button class="roomsbtn sch" data-t="sched" type="button"><span class="ri">📅</span><span class="rt2"><b>جدول حصص الدعم والفسحة</b><small>${meT() ? 'حصص ' + esc(meT().name) + ': ' + SCHED().filter(h => h.tid === me).map(h => DAYN[h.day] + ' (' + PERW[h.per] + ')').join('، ') : SCHED().length + ' حصص أسبوعيًّا + فسحة الأحد والاثنين'} · التحضير والحضور الشهري</small></span><span class="go">فتح ←</span></button></div>
   <h2 class="sec" style="margin-top:16px">📈 إحصائيات البرنامج <small>تتحدّث تلقائيًّا مع تقدّم الأسابيع والخطط</small></h2>
   <div class="hstats">
    <div class="hs k1"><span class="hi">🧑‍🎓</span><b data-count="${P.n}">${P.n}</b><span>طلاب البرنامج</span><small>${P.cats.map((n, i) => `${CATS[i + 1]} ${n}`).join(' · ')}</small></div>
@@ -1660,8 +1726,8 @@ function lookCard() { const L = curLook();
 /* ---------- usage guide ---------- */
 const GUIDE = [
   ['🔐', 'الدخول وكلمة المرور', ['افتح الرابط واكتب كلمة المرور ثم اضغط «دخول». كلمة المرور الافتراضية 1234، وتُطلب في كل مرة يُفتح فيها الرابط.', 'غيّر كلمة المرور من ☰ ← الإعدادات ← «كلمة المرور والنسخ»، ويمكنك قفل الصفحة فورًا بزر «قفل الآن».']],
-  ['☰', 'القائمة العلوية', ['زر المربّع ذي الخطوط الثلاث في زاوية الشريط العلوي يفتح القائمة: الصفحة الرئيسية، دليل الاستخدام، الإعدادات.', 'يُظهر الشريط العلوي مسار مكانك: 🏠 ← الصف ← القسم، وتستطيع الضغط على أيّ جزء منه للرجوع.']],
-  ['👨‍🏫', 'اختيار المعلم والصفوف', ['اختر اسمك من «المعلم المتابع» في الشريط العلوي، فتظهر في الصفحة الرئيسية صفوفك فقط، كل صف في مستطيل يبيّن عدد طلابه وفئاتهم ونسبة الإنجاز والحضور.', 'اختيار «الكل (المنسق)» يُظهر جميع الصفوف.', 'اضغط على مستطيل الصف للدخول إليه.']],
+  ['☰', 'الشريط الجانبي', ['اضغط المربع ذا الخطوط الثلاث ☰ أعلى يمين الشاشة، فيظهر شريط جانبي على يمين الشاشة فيه كل أقسام المنصة مرتبة: الرئيسية (الصفحة الرئيسية، لوحة المتابعة) · العمل اليومي (جدول الحصص والتحضير، التنبيهات) · الصفوف (صفوفك مباشرة) · أقسام العمل (الخطط الفردية، خطط الفئات، طباعة الأنشطة، المتابعة الصفية، الاختبار البعدي، التقارير، الطلاب) · عام (دليل الاستخدام، الإعدادات).', 'يظهر في أعلى الشريط اسم المعلم والصف الحالي، ويُغلق بالضغط على ✕ أو خارج الشريط أو باختيار أي قسم.', 'يُظهر الشريط العلوي مسار مكانك: 🏠 ← الصفوف ← الصف ← القسم، وتستطيع الضغط على أيّ جزء منه للرجوع.']],
+  ['👨‍🏫', 'اختيار المعلم والصفوف', ['اختر اسمك من «المعلم المتابع» في الشريط العلوي؛ فتظهر صفوفك وحصصك وتنبيهاتك فقط. في الصفحة الرئيسية بطاقة «📌 مهام اليوم» بحصص اليوم وفسحته، وبجانب كل حصة أزرار مباشرة: 🗓️ تحضير · 🖨️ الأنشطة · 📋 المتابعة.', 'اختيار «الكل (المنسق)» يُظهر جميع الصفوف.', 'اضغط على مستطيل الصف للدخول إليه.']],
   ['🏫', 'داخل الصف', ['تظهر خانات الصف: الخطط الفردية، خطط الفئات، طباعة الأنشطة، المتابعة الصفية، التقارير، جدول الحصص والفسحة، الاختبار البعدي، الطلاب.', 'كل خانة تعمل على طلاب هذا الصف فقط، وتظهر فيها فئات الصف الموجودة فقط.']],
   ['📋', 'الخطط الفردية', ['اختر الطالب، فتظهر خطته بحسب مستوى مهاراته في كل كفاية والأنشطة المقترحة التالية.', 'سجّل المتابعة: التاريخ، والمعلم، ومدى التحقّق، والدرجة. يظهر مربع «🖨️ الأنشطة المطبوعة للطالب وأهدافها»: كل نشاط طُبع للطالب من «طباعة الأنشطة» وتحته «يحقّق الهدف»: الهدف المرتبط به مختار تلقائيًّا، ويمكنك تغييره أو إضافة هدف آخر من قائمة الأهداف (تحفظ المنصة ربطك للنشاط لاستخدامه لاحقًا). حدّد لكل نشاط طُبّق: تحقّق / جزئيًّا / لم يتحقّق، فتتحقّق أهدافه. وخانة «الأهداف» تحتها لأي أهداف أخرى تحقّقت. ثم اختر الملاحظات والإجراءات والمقترحات واضغط «حفظ المتابعة».', 'بعد التقييم ينتقل النشاط إلى «أنشطة مطبوعة قُيّمت سابقًا»، ويُحتسب هدفه في قسم «🎯 أهداف الخطة الفردية» الذي يعرض أهداف كل كفاية وحالتها، ويتحدّث من الخطة الفردية وخطط الفئات معًا', 'قسم «🎯 أهداف الخطة الفردية» يعرض أهداف كل كفاية من مستوى بدء الطالب وحالة كل هدف، ويتحدّث تلقائيًّا من الخطة الفردية وخطط الفئات معًا، ويظهر عدد الأهداف المتحقّقة لكل كفاية في جدول الخطة والتقارير', 'يظهر سجلّ متابعات الطالب أسفل الصفحة ويمكن حذف أيّ متابعة منه.', 'للطباعة: زر «📄 خطة هذا الطالب» يُنزّل خطته الفردية PDF (مستوى المهارات، وخطة الفترات والأنشطة، والأهداف، وسجل المتابعة)، وزر «خطط جميع الطلاب في القائمة» يُنزّلها كلها في ملف واحد.']],
   ['👥', 'خطط الفئات', ['اختر الفئة فتظهر أسماء طلابها، وكلهم محدّدون؛ أزل العلامة من المربع بجانب اسم الطالب غير المشارك.', 'يظهر مربع «الأنشطة المطبوعة لطلاب الفئة»: كل نشاط طُبع لطلاب الفئة وأسماؤهم والهدف الذي يحققه؛ حدّد مدى تحقّقه واضغط «حفظ متابعة الفئة»؛ يُحتسب الهدف في الخطة الفردية لكل طالب مشارك.', 'زر «📄 طباعة خطة الفئة PDF» يُنزّل خطة الفئة: طلابها ومستوى بدئهم، وأنشطة الكتاب بحسب المستوى، وسجل المتابعة.']],
@@ -1695,10 +1761,12 @@ function collectEntry(pref) {
   return {id: uid(), ts: Date.now(), date: $('#' + pref + 'Date').value || today(), tid: $('#' + pref + 'T').value, ...collectPBox(pref), ach: $('#' + pref + 'Ach').value, score: $('#' + pref + 'Score') ? ($('#' + pref + 'Score').value === '' ? null : +$('#' + pref + 'Score').value) : null, note: $('#' + pref + 'Note').value.trim(), nSel: mselVal(pref + 'N'), pSel: mselVal(pref + 'P'), rSel: mselVal(pref + 'R')};
 }
 document.addEventListener('click', async ev => {
-  if (!ev.target.closest('.menuw')) menu(false);
+  if (ev.target.closest('#dback') || ev.target.closest('#dClose')) { menu(false); return; }
   if (!ev.target.closest('.bellw') || ev.target.closest('.npanel .achip')) bell(false);
   const b = ev.target.closest('button, [data-open]'); if (!b) return;
-  if (b.id === 'burger') { menu($('#tabs').hidden); return; }
+  if (b.id === 'burger') { menu(!$('#drawer').classList.contains('open')); return; }
+  if (b.dataset.bellopen) { menu(false); bell(true); return; }
+  if (b.dataset.go) { const [t2, c] = b.dataset.go.split('|'); UI.room = c; UI.rCls = c; UI.cfCls = c; UI.sid = ''; UI.pStu = []; tab = t2; render(); window.scrollTo({top: 0}); return; }
   if (b.id === 'bellB') { bell($('#bellP').hidden); return; }
   if (b.id === 'pwGo') { if (await checkPw($('#pwIn').value)) { unlocked = true; render(); } else { $('#pwMsg').textContent = 'كلمة المرور غير صحيحة'; } return; }
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
