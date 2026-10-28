@@ -1266,7 +1266,7 @@ function render() {
   if (!unlocked) { v.innerHTML = `<div class="lockbox"><div class="lk">🔒</div><h2>متابعة برنامج «بالعربية أرتقي»</h2><p>أدخل كلمة المرور للدخول</p><div class="lkrow"><input type="password" id="pwIn" autocomplete="current-password" inputmode="numeric"><button class="btn" id="pwGo" type="button">دخول</button></div><p class="mini2" id="pwMsg" style="margin-top:8px"></p></div>`; setTimeout(() => $('#pwIn') && $('#pwIn').focus(), 50); return; }
   const f = {les: vLes, op: vOp, tl: vTl, ses: vSes, sched: vSched, post: vPost, guide: vGuide, classes: vClasses, home: vHome, room: vRoom, print: vPrint, dash: vDash, ind: vInd, grp: vGrp, cls: vCls, att: vAtt, rep: vRep, studs: vStuds, set: vSet}[tab];
   setTimeout(countUp, 0); setTimeout(renderBell, 0);
-  v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + sesBack() + f(); $$('#view input[data-ind]').forEach(i => { i.indeterminate = true; }); renderSum(); if (tab === 'print') fillFrame(); if (tab === 'les') fillLes();
+  v.innerHTML = (mode === 'local' && !ghReady() && !ALL().length && tab !== 'set' ? '<div class="note warn" style="margin-top:12px">🔗 لا توجد بيانات على هذا الجهاز بعد. اربط الصفحة بمستودع البيانات من <button class="lnk" data-t="set" type="button">⚙️ الإعدادات ← الربط مع GitHub</button> لتحميل الطلاب والمتابعات.</div>' : '') + sesBack() + f(); $$('#view input[data-ind]').forEach(i => { i.indeterminate = true; }); renderSum(); if (tab === 'print') fillFrame(); if (tab === 'les') fillLes(); if (tab === 'set') setTimeout(fillVoices, 50);
 }
 function countUp() { if (countUp.done || !document.querySelector('.hs b[data-count]')) return; countUp.done = 1; document.querySelectorAll('.hs b[data-count]').forEach(b => { const n = +b.dataset.count; if (!n || b.dataset.done) return; b.dataset.done = 1; const t0 = performance.now(); const f = t => { const k = Math.min(1, (t - t0) / 900); b.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); }
 function bell(open) { const p = $('#bellP'), b = $('#bellB'); if (!p) return; p.hidden = !open; b.setAttribute('aria-expanded', String(!!open)); b.classList.toggle('on', !!open); if (open) p.innerHTML = alertsCard(); }
@@ -1805,7 +1805,7 @@ function vSet() {
   <div class="card" style="margin-top:12px"><div class="ch"><h3>📋 القوائم المنسدلة (الملاحظات والإجراءات والمقترحات)</h3></div><div class="cb"><div class="frm"><label>القائمة<select id="lK">${Object.entries(LISTN).map(([k, v]) => `<option value="${k}"${k === UI.lk ? ' selected' : ''}>${v}</option>`).join('')}</select></label><label>المجموعة<select id="nG">${LIST(UI.lk).map((g, i) => `<option value="${i}">${esc(g.g)}</option>`).join('')}<option value="new">+ مجموعة جديدة…</option></select></label><label class="wide">النص<input type="text" id="nT" placeholder="اكتب الملاحظة أو الإجراء أو المقترح"></label><div><button class="btn sm" id="addN" type="button">➕ إضافة إلى القائمة</button></div></div>
   <div class="tw" style="max-height:320px;overflow:auto;margin-top:8px"><table><tbody>${LIST(UI.lk).map((g, gi) => g.items.map((t, ti) => `<tr><td class="mini2">${esc(g.g)}</td><td class="l">${esc(t)}</td><td><button class="btn r sm" data-del="note:${gi}:${ti}" type="button">حذف</button></td></tr>`).join('')).join('')}</tbody></table></div></div></div></div>`,
   gen: () => `<div class="card" style="margin-top:12px"><div class="ch"><h3>🏫 بيانات عامة</h3></div><div class="cb"><div class="frm"><label>العام الدراسي<input type="text" id="cYear" value="${esc(S.cfg.year)}"></label><label>المدرسة<input type="text" id="cSchool" value="${esc(S.cfg.school)}"></label><label>منسق البرنامج<input type="text" id="cCoord" value="${esc(S.cfg.coord)}"></label><label>مدير المدرسة<input type="text" id="cPrin" value="${esc(S.cfg.principal)}"></label><label>بداية الخطة (أول أيام الأسبوع الثالث)<input type="date" id="cStart" value="${esc(S.cfg.start || '')}"></label><div><button class="btn" id="cSave" type="button">💾 حفظ</button></div></div></div></div>`,
-  look: lookCard, sch: schedEditor};
+  look: () => lookCard() + voiceCard(), sch: schedEditor};
   if (!P[UI.sTab]) UI.sTab = 'look';
   return `<div class="tools setnav"><span class="seg">${SET_T.map(([k, n]) => `<button type="button" data-stab="${k}" aria-pressed="${k === UI.sTab}">${n}</button>`).join('')}</span></div>` + P[UI.sTab]();
 }
@@ -1977,6 +1977,8 @@ const LX = [
  {r: '<b>المد بالألف</b>: ألف ساكنة بعد حرف مفتوح تمدّ الصوت: بَـا = <b>بَاب</b>.', st: 'رحلة القارب', tpr: 'افتح ذراعيك على اتساعهما ↔️ وأنت تمدّ الصوت (آآآ).'},
  {r: '<b>المد بالياء</b>: ياء ساكنة بعد حرف مكسور تمدّ الصوت: فِـي = <b>فِيل</b>.', st: 'زيارة الطبيب', tpr: 'مدّ ذراعيك إلى الأسفل ⬇️ وأنت تمدّ الصوت (إيييي).'},
  {r: '<b>المد بالواو</b>: واو ساكنة بعد حرف مضموم تمدّ الصوت: نُـو = <b>نُور</b>.', st: 'يوم الجمعة', tpr: 'ضمّ شفتيك ومدّ ذراعيك إلى الأمام ➡️ وأنت تمدّ الصوت (أووو).'}];
+const LTV = ["حَرَكَاتُ ضَبْطِ الحُرُوفِ", "الحُرُوفُ الهِجَائِيَّةُ", "كِتَابَةُ الحُرُوفِ", "قِرَاءَةُ كَلِمَاتٍ جَمِيعُ حُرُوفِهَا مَفْتُوحَةٌ", "قِرَاءَةُ كَلِمَاتٍ أَحَدُ حُرُوفِهَا عَلَيْهِ كَسْرَةٌ", "قِرَاءَةُ كَلِمَاتٍ أَحَدُ حُرُوفِهَا عَلَيْهِ ضَمَّةٌ", "قِرَاءَةُ كَلِمَاتٍ أَحَدُ حُرُوفِهَا سَاكِنٌ", "اللَّامُ القَمَرِيَّةُ", "اللَّامُ الشَّمْسِيَّةُ", "المَدُّ بِالأَلِفِ", "المَدُّ بِاليَاءِ", "المَدُّ بِالوَاوِ"];
+const LRV = ["الحَرَكَاتُ أَرْبَعٌ: الفَتْحَةُ، وَالضَّمَّةُ، وَالكَسْرَةُ، وَالسُّكُونُ.", "حُرُوفُ اللُّغَةِ العَرَبِيَّةِ ثَمَانِيَةٌ وَعِشْرُونَ حَرْفًا، تَبْدَأُ بِالأَلِفِ، وَتَنْتَهِي بِاليَاءِ.", "لِلْحَرْفِ أَشْكَالٌ: فِي أَوَّلِ الكَلِمَةِ، وَفِي وَسَطِهَا، وَفِي آخِرِهَا.", "كُلُّ حُرُوفِ الكَلِمَةِ عَلَيْهَا فَتْحَةٌ، مِثْلُ: كَتَبَ.", "فِي الكَلِمَةِ حَرْفٌ عَلَيْهِ كَسْرَةٌ، مِثْلُ: لَعِبَ.", "فِي الكَلِمَةِ حَرْفٌ عَلَيْهِ ضَمَّةٌ، مِثْلُ: كَبُرَ.", "فِي الكَلِمَةِ حَرْفٌ سَاكِنٌ، مِثْلُ: بَحْرٌ.", "اللَّامُ القَمَرِيَّةُ تُكْتَبُ وَتُنْطَقُ، مِثْلُ: القَمَرُ.", "اللَّامُ الشَّمْسِيَّةُ تُكْتَبُ وَلَا تُنْطَقُ، مِثْلُ: الشَّمْسُ.", "الأَلِفُ بَعْدَ الحَرْفِ المَفْتُوحِ تَمُدُّ الصَّوْتَ، مِثْلُ: بَابٌ.", "اليَاءُ بَعْدَ الحَرْفِ المَكْسُورِ تَمُدُّ الصَّوْتَ، مِثْلُ: فِيلٌ.", "الوَاوُ بَعْدَ الحَرْفِ المَضْمُومِ تَمُدُّ الصَّوْتَ، مِثْلُ: نُورٌ."];
 const LDIST = {0: 2, 1: 0, 2: 0, 3: 4, 4: 3, 5: 3, 6: 3, 7: 8, 8: 7, 9: 10, 10: 11, 11: 9};
 const FEATRX = {4: '\u0650', 5: '\u064f', 6: '\u0652', 9: '\u064eا', 10: '\u0650ي', 11: '\u064fو'};
 const LFEAT = ['الحركات', 'الحروف', 'أشكال الحروف', 'حروف مفتوحة', 'كسرة', 'ضمة', 'حرف ساكن', 'لام قمرية', 'لام شمسية', 'مد بالألف', 'مد بالياء', 'مد بالواو'];
@@ -2039,10 +2041,10 @@ function lessonDeck(c, w) {
   // bubble game
   S_('game', 3, `🎮 لعبة: اصطد ${li >= 3 ? 'كلمات ' + LFEAT[li] : 'الكلمة'}`, `<div class="gm"><div class="gq" id="gq">${li >= 3 ? `اضغط الفقاعات التي فيها <b>${LFEAT[li]}</b>` : 'اضغط 🔊 ثم اصطد الكلمة التي تسمعها'}</div><div class="bub" id="bub"></div><div class="gctl"><button id="gstart">▶ ابدأ اللعبة</button><span>⭐ <b id="gsc">0</b></span></div></div>`);
   S_('exit', 2, '🎫 بطاقة الخروج', `<div class="exit"><div class="eq">${li >= 3 ? `اكتب كلمة فيها <b>${LFEAT[li]}</b> على بطاقتك، واقرأها لمعلمك.` : li === 1 ? 'اكتب ثلاثة حروف متتالية، واقرأها لمعلمك.' : 'اكتب كلمة من الدرس، وضع حركاتها، واقرأها.'}</div><div class="smi"><button>😃<b>فهمت جيدًا</b></button><button>🙂<b>فهمت قليلًا</b></button><button>🤔<b>أحتاج مساعدة</b></button></div></div>`);
-  const data = {li, feat: LFEAT[li], words: gw, sents, frx: FEATRX[li] || '', ex: exs, rule: lx.r.replace(/<[^>]+>/g, ''), title: L.t || '', bank: B.w};
+  const data = {li, feat: LFEAT[li], words: gw, sents, frx: FEATRX[li] || '', ex: exs, rule: lx.r.replace(/<[^>]+>/g, ''), title: L.t || '', bank: B.w, tv: LTV[li] || L.t || '', rv: LRV[li] || '', vk: LK + '-voice'};
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(L.t || 'درس')} – ${esc(clsName(c))}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet"><style>${ACT_CSS}${DECK_CSS}</style></head><body><div id="stage">${sl.join('')}</div>
-<nav class="dnv"><button id="prv">→</button><span id="cnt"></span><button id="nxt">←</button><button id="fs">⛶</button></nav>
+<nav class="dnv"><button id="prv">→</button><span id="cnt"></span><button id="nxt">←</button><button id="fs">⛶</button><label class="vl">🔊 <select id="vsel" title="صوت القراءة"></select></label></nav>
 <script>const D=${JSON.stringify(data).replace(/</g, '\\u003c')};${DECK_JS}<\/script></body></html>`;
 }
 const bareA = w => String(w).replace(/[\u064b-\u0652\u0640.،؟!«»]/g, '');
@@ -2100,7 +2102,8 @@ button{font-family:inherit;cursor:pointer}
 .bb.good{background:radial-gradient(circle at 30% 30%,#fff,#7de3a6);transform:scale(.2);opacity:0;transition:all .5s}.bb.bad{animation:shake .4s}
 @keyframes fl{to{transform:translateY(-40px)}}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .exit{display:grid;gap:30px;margin-top:20px}.eq{font-size:34px;font-weight:800;background:#fff8e7;border:4px dashed #ff8a3d;border-radius:22px;padding:30px;text-align:center}.smi{display:flex;gap:30px;justify-content:center}.smi button{background:#fff;border:3px solid #e6eef2;border-radius:22px;padding:14px 26px;font-size:70px;display:grid}.smi b{font-size:20px}.smi button.on{border-color:#0f9d9a;background:#eaf8f7}
-.dnv{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 14px;z-index:9;box-shadow:0 6px 20px rgba(0,0,0,.3)}.dnv button{border:0;background:#0f9d9a;color:#fff;border-radius:999px;width:42px;height:42px;font-size:20px}#cnt{font-weight:800;min-width:70px;text-align:center}
+.dnv{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 14px;z-index:9;box-shadow:0 6px 20px rgba(0,0,0,.3)}.vl{font-size:14px;display:flex;align-items:center;gap:4px}.vl select{max-width:220px;font:inherit;font-size:12px;border-radius:8px;padding:3px}
+.dnv button{border:0;background:#0f9d9a;color:#fff;border-radius:999px;width:42px;height:42px;font-size:20px}#cnt{font-weight:800;min-width:70px;text-align:center}
 @media print{html,body{overflow:visible;background:#fff;height:auto}#stage{position:static;transform:none!important;width:auto;height:auto}.slide{position:relative;display:flex!important;width:1280px;height:720px;page-break-after:always;break-after:page;box-shadow:none;zoom:.82;margin:0 auto}.dnv,.actl,.sctl,.rctl,.gctl{display:none!important}.frame{position:static;display:flex}.frames{height:auto}@page{size:A4 landscape;margin:6mm}}
 `.replace('${H}', '420');
 const DECK_JS = `
@@ -2111,7 +2114,14 @@ addEventListener('resize',fit);fit();go(0);
 document.getElementById('nxt').onclick=()=>go(cur+1);document.getElementById('prv').onclick=()=>go(cur-1);
 document.getElementById('fs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')go(cur+1);if(e.key==='ArrowRight'||e.key==='PageUp')go(cur-1);});
-function say(t,r){try{const u=new SpeechSynthesisUtterance(String(t).replace(/[«»]/g,''));u.lang='ar-SA';u.rate=r||.8;const v=speechSynthesis.getVoices().find(v=>/^ar/.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);return u}catch(e){return null}}
+let VP={};try{VP=JSON.parse(localStorage.getItem(D.vk)||'{}')}catch(e){}
+function vScore(v){let s=0;if(/natural|online|neural|premium|enhanced/i.test(v.name))s+=10;if(/google/i.test(v.name))s+=5;if(/hamed|zariyah|shakir|hamdan|fatima|salma|laila|maged|tarik|naayf|majed/i.test(v.name))s+=3;if(/^ar-SA/i.test(v.lang))s+=1;return s}
+function arVoices(){try{return speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang)).sort((a,b)=>vScore(b)-vScore(a))}catch(e){return[]}}
+function bestV(){const vs=arVoices();return vs.find(v=>v.name===VP.n)||vs[0]||null}
+function say(t,r){try{const u=new SpeechSynthesisUtterance(String(t).replace(/[«»]/g,''));u.lang='ar-SA';const v=bestV();if(v){u.voice=v;u.lang=v.lang}u.rate=(r||.85)*(VP.r||1);u.pitch=1;speechSynthesis.cancel();speechSynthesis.speak(u);return u}catch(e){return null}}
+function vsel(){const s=document.getElementById('vsel');if(!s)return;const vs=arVoices(),b=bestV();s.innerHTML=vs.length?vs.map(v=>'<option'+(b&&v.name===b.name?' selected':'')+'>'+v.name+'</option>').join(''):'<option>لا يوجد صوت عربي في الجهاز</option>';}
+try{speechSynthesis.onvoiceschanged=vsel}catch(e){}setTimeout(vsel,300);
+document.addEventListener('change',e=>{if(e.target.id==='vsel'){VP.n=e.target.value;try{localStorage.setItem(D.vk,JSON.stringify(VP))}catch(x){}say('مَرْحَبًا، هَذَا صَوْتُ الدَّرْسِ.')}});
 const bare=w=>String(w).replace(/[\\u064b-\\u0652\\u0640.،؟!«»]/g,'');
 function isF(w){const x=String(w).replace(/[.،؟!«»]/g,'');if(D.li===7)return /^(?:[وفب]\\u064e?)?ال/.test(x)&&!/^(?:[وفب]\\u064e?)?ال.\\u0651/.test(x)&&!/^(?:[وفب]\\u064e?)?ال[تثدذرزسشصضطظلن]/.test(x);if(D.li===8)return /^(?:[وفب]\\u064e?)?ال.\\u0651/.test(x);if(D.frx)return x.includes(D.frx);return D.bank.some(y=>bare(y[0])===bare(x));}
 document.addEventListener('click',e=>{const p=e.target.closest('.pic');if(p){p.classList.add('op');say(p.dataset.say);return}
@@ -2123,8 +2133,8 @@ document.addEventListener('click',e=>{const p=e.target.closest('.pic');if(p){p.c
 });
 // animated video
 (()=>{const b=document.getElementById('aplay');if(!b)return;const sc=document.getElementById('ascene'),bar=document.getElementById('abar');
- const scenes=[{e:'🌟',t:'برنامج «بالعربية أرتقي»',s:'درس اليوم: '+D.title},{e:'💡',t:D.rule,s:D.rule}];
- D.bank.slice(0,6).forEach(x=>scenes.push({e:x[1]||'📘',t:x[0],s:x[0],w:1}));scenes.push({e:'👏',t:'أحسنت! هيّا نتدرّب معًا',s:'أحسنت! هيّا نتدرّب معًا'});
+ const scenes=[{e:'🌟',t:'برنامج «بالعربية أرتقي»',s:'بَرْنَامَجُ بِالعَرَبِيَّةِ أَرْتَقِي. دَرْسُ اليَوْمِ: '+D.tv},{e:'💡',t:D.rule,s:D.rv||D.rule}];
+ D.bank.slice(0,6).forEach(x=>scenes.push({e:x[1]||'📘',t:x[0],s:x[0],w:1}));scenes.push({e:'👏',t:'أحسنت! هيّا نتدرّب معًا',s:'أَحْسَنْتَ! هَيَّا نَتَدَرَّبُ مَعًا.'});
  let run=false;b.onclick=async()=>{if(run){run=false;speechSynthesis.cancel();b.textContent='▶ تشغيل';return}run=true;b.textContent='⏸ إيقاف';
   for(let i=0;i<scenes.length&&run;i++){const x=scenes[i];sc.innerHTML='<div class="abig">'+x.e+'</div><div class="atxt" style="'+(x.w?'font-size:90px':'')+'">'+x.t+'</div>';sc.style.animation='none';void sc.offsetWidth;sc.style.animation='';bar.style.width=((i+1)/scenes.length*100)+'%';
    await new Promise(r=>{const u=say(x.s,.75);let done=false;const fin=()=>{if(!done){done=true;setTimeout(r,x.w?900:600)}};if(u){u.onend=fin;u.onerror=fin}setTimeout(fin,Math.max(2500,x.s.length*110));});}
@@ -2156,6 +2166,18 @@ function vLes() { const cls = UI.room ? [UI.room] : TCLS(), cw = curWeek(), w = 
   <p class="hint">يتضمن الدرس: صفحة العنوان (اسم البرنامج والصف والفئات) · قواعد الحصة · نشاط تمهيدي · الأهداف · 🎬 فيديو متحرك مسموع للدرس · الشرح · 📖 قصة تفاعلية · 🏃 محطات ألعاب حركية بحسب مهارات كل طالب · 🎲 مولّد اللعبة الحركية · 👥 نشاط جماعي متدرّج لكل فئة من أسئلة أنشطة الصف · 📝 تقويم فردي · 🎮 لعبة «اصطد الكلمة» · 🎫 بطاقة الخروج. التنقل بالأسهم أو الأزرار أسفل العرض، والصوت بقراءة آلية عربية (حسب الجهاز).</p></div></section>`; }
 function fillLes() { const f = $('#lesFrame'); if (!f) return; const cls = UI.room ? [UI.room] : TCLS(); const c = UI.lc && cls.includes(UI.lc) ? UI.lc : cls[0]; if (!c) return; f.srcdoc = lessonDeck(c, UI.lw || curWeek()); }
 function lesCur() { const cls = UI.room ? [UI.room] : TCLS(); const c = UI.lc && cls.includes(UI.lc) ? UI.lc : cls[0]; return {c, w: UI.lw || curWeek()}; }
+
+function voiceCard() { return `<div class="card" style="margin-top:12px"><div class="ch"><h3>🔊 صوت القراءة في الدروس</h3><small>يُستخدم في الفيديو والقصص والألعاب · يُحفظ على هذا الجهاز</small></div><div class="cb"><div class="frm">
+  <label>الصوت<select id="vVoice"></select></label><label>السرعة<select id="vRate">${[['0.8', 'أبطأ'], ['0.9', 'بطيئة'], ['1', 'عادية'], ['1.1', 'أسرع']].map(([v, t]) => `<option value="${v}"${String(voicePref().r || 1) === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+  <div><button class="btn sm" id="vTest" type="button">🔊 تجربة</button></div></div>
+  <p class="hint">للحصول على صوت بشري طبيعي افتح المنصة في متصفح <b>Microsoft Edge</b> واختر صوتًا فيه «Natural» مثل «Hamed» أو «Zariyah» (أصوات عصبية تشبه الصوت البشري)؛ وفي Chrome اختر «Google العربية». تُختار تلقائيًّا أفضل الأصوات المتاحة في الجهاز، وجميع النصوص المقروءة مشكولة بالفصحى.</p><p class="mini2" id="vInfo"></p></div></div>`; }
+const voicePref = () => { try { return JSON.parse(localStorage.getItem(LK + '-voice') || '{}'); } catch (e) { return {}; } };
+function arVoicesApp() { const sc = v => (/natural|online|neural|premium|enhanced/i.test(v.name) ? 10 : 0) + (/google/i.test(v.name) ? 5 : 0) + (/hamed|zariyah|shakir|hamdan|fatima|salma|laila|maged|tarik|naayf|majed/i.test(v.name) ? 3 : 0) + (/^ar-SA/i.test(v.lang) ? 1 : 0); try { return speechSynthesis.getVoices().filter(v => /^ar/i.test(v.lang)).sort((a, b) => sc(b) - sc(a)); } catch (e) { return []; } }
+function fillVoices() { const s = $('#vVoice'); if (!s) return; const vs = arVoicesApp(), P = voicePref(), cur = vs.find(v => v.name === P.n) || vs[0];
+  s.innerHTML = vs.length ? vs.map(v => `<option${cur && v.name === cur.name ? ' selected' : ''}>${esc(v.name)}</option>`).join('') : '<option>لا يوجد صوت عربي في هذا الجهاز/المتصفح</option>';
+  const i = $('#vInfo'); if (i) i.textContent = vs.length ? `الأصوات العربية المتاحة: ${vs.length} · ${vs.some(v => /natural|online|neural/i.test(v.name)) ? '✓ يوجد صوت طبيعي (Natural)' : 'لا يوجد صوت «Natural» – جرّب متصفح Edge'}` : ''; }
+try { speechSynthesis.onvoiceschanged = () => fillVoices(); } catch (e) {}
+function sayApp(t) { try { const P = voicePref(), v = arVoicesApp().find(x => x.name === P.n) || arVoicesApp()[0]; const u = new SpeechSynthesisUtterance(t); u.lang = 'ar-SA'; if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.85 * (+P.r || 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
 
 /* ---------- schedule page ---------- */
 function vSched() {
@@ -2358,6 +2380,7 @@ document.addEventListener('click', async ev => {
     let pairs = []; if (b.dataset.unpr) { const i = b.dataset.unpr.indexOf('|'); pairs = [[b.dataset.unpr.slice(0, i), b.dataset.unpr.slice(i + 1)]]; } else pairs = UI.pStu.filter(id => prSet(id).has(b.dataset.unprall)).map(id => [id, b.dataset.unprall]);
     for (const [sid, key] of pairs) await put('pr', sid, {items: printedOf(sid).filter(it => it.key !== key)});
     toast(`↩ أُلغيت الطباعة لـ ${pairs.length} ${pairs.length === 1 ? 'طالب' : 'طلاب'} – عاد النشاط متاحًا للطباعة`); const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+  if (b.id === 'vTest') { sayApp('ذَهَبَ الوَلَدُ إِلَى المَدْرَسَةِ، وَقَرَأَ الكِتَابَ بِصَوْتٍ وَاضِحٍ.'); return; }
   if (b.dataset.les) { const [c, w] = b.dataset.les.split('|'); UI.lc = c; UI.lw = +w; if (tab !== 'les') { tab = 'les'; if (UI.room && UI.room !== c) UI.room = c; } render(); if (b.closest('.wplan')) window.scrollTo({top: 0}); return; }
   if (b.id === 'lesShow') { const {c, w} = lesCur(); if (!c) return; const o = document.createElement('div'); o.className = 'lesov'; o.innerHTML = '<button class="lesx" type="button">✕ إغلاق</button><iframe allow="fullscreen; autoplay"></iframe>'; document.body.appendChild(o); o.querySelector('iframe').srcdoc = lessonDeck(c, w); o.querySelector('.lesx').onclick = () => o.remove(); return; }
   if (b.id === 'lesDl') { const {c, w} = lesCur(); if (!c) return; await saveFile(('درس_الأسبوع_' + w + '_' + c).replace(/[\/\s]+/g, '_') + '.html', lessonDeck(c, w), 'text/html'); return; }
@@ -2487,6 +2510,7 @@ document.addEventListener('change', async ev => {
   if (t.id === 'iAch' || t.id === 'gAch') { const pf = t.id[0]; $$('#' + pf + 'PBox .gr:not(.ro)').forEach(r => { const x = r.querySelector(`input[type=radio][value="${t.value || 'full'}"]`); if (x) x.checked = true; }); return; }
   const id = t.id;
   if (id === 'attM') { UI.attM = t.value; return; }
+  if (id === 'vVoice' || id === 'vRate') { const P = voicePref(); if (id === 'vVoice') P.n = t.value; else P.r = +t.value; try { localStorage.setItem(LK + '-voice', JSON.stringify(P)); } catch (e) {} sayApp('مَرْحَبًا بِكُمْ فِي بَرْنَامَجِ بِالعَرَبِيَّةِ أَرْتَقِي.'); return; }
   if (id === 'lesVid') { const L = lessonOfW(UI.lw || curWeek()); if (L) { S.cfg.tlVid = Object.assign({}, S.cfg.tlVid || {}, {[L.id]: t.value.trim()}); await saveCfg(); render(); } return; }
   if (t.dataset && t.dataset.opf) { const [id, k] = t.dataset.opf.split('|'), L = JSON.parse(JSON.stringify(OP())), x = L.find(y => y.id === id); if (x) { x[k] = t.value; await saveOp(L); } return; }
   if (t.dataset && t.dataset.opm) { S.cfg.opMeta = Object.assign({}, S.cfg.opMeta || {}, {[t.dataset.opm]: t.value}); await saveCfg(); return; }
