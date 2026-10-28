@@ -795,6 +795,14 @@ table.lest td,table.lest th{text-align:center;vertical-align:middle}
 .lesx.lesp{left:120px;background:#ffd34e}.lesx.lesd{left:290px}
 .plov{display:flex;flex-direction:column}.plov iframe{flex:1;height:auto;background:#fff8ec}
 .plbar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#0b6e75;color:#fff;flex-wrap:wrap}.plbar span{flex:1}.plbar button{font:inherit;font-weight:800;border:0;border-radius:999px;padding:6px 14px;background:#fff;color:#0b6e75;cursor:pointer}.plbar .plpdf{background:#ffd34e;color:#1d2b3a}.plbar b{font-size:15px}
+.imps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px}.ims{background:#f4f8fb;border:2px solid #dbe6ee;border-radius:12px;padding:6px 10px;text-align:center}.ims span{display:block;font-size:12px;color:#5b6b78}.ims b{font-size:20px}.ims.p{border-color:#9fd8b8;background:#eefaf3}.ims.p b{color:#2f9e6a}.ims.n{border-color:#f2b3b3;background:#fff1f1}.ims.n b{color:#c94242}
+.impw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.impw .sp{flex:1}
+.lvb{display:inline-flex;gap:4px}.lvb button{width:34px;height:34px;border-radius:10px;border:2px solid #d5dee6;background:#fff;font:inherit;font-weight:900;cursor:pointer}.lvb .lv1.on{background:#e5484d;border-color:#e5484d;color:#fff}.lvb .lv2.on{background:#f2a33a;border-color:#f2a33a;color:#fff}.lvb .lv3.on{background:#d9b52c;border-color:#d9b52c;color:#fff}.lvb .lv4.on{background:#2f9e6a;border-color:#2f9e6a;color:#fff}
+.spk{display:inline-flex;gap:3px;align-items:center}.spk i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dlt{font-weight:900;white-space:nowrap}.dlt.p{color:#2f9e6a}.dlt.n{color:#c94242}
+.dec{font-size:12.5px;font-weight:700;border-radius:8px;padding:2px 8px;background:#f4f6f8}.dec.ok,.dec.up{background:#eefaf3;color:#1f7a4f}.dec.dn{background:#fff1f1;color:#b33}.dec.fl{background:#fff8e6;color:#8a6200}
+.impt tr.mst td{opacity:.6}
+@media(max-width:700px){.imps{grid-template-columns:repeat(2,1fr)}.lvb button{width:30px;height:30px}}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -1492,6 +1500,35 @@ function logTable(list, showStu) {
     <td>${e.ach ? `<span class="ach ${e.ach}">${ACH[e.ach]}</span>` : '—'}</td><td>${e.score != null && e.score !== '' ? fmt(+e.score) : '—'}</td><td class="l mini2" style="max-width:280px">${noteCell(e)}</td>
     <td>${e.kind === 'grp' && !showStu ? '' : `<button class="btn r sm" data-del="${showStu ? 'g' : 'i'}:${e.id}">حذف</button>`}</td></tr>`).join('')}</tbody></table></div>`;
 }
+
+/* ---------- impact measurement (inside the individual plan) ---------- */
+const LVM = {1: ['ضعيف', '#e5484d', 25], 2: ['يحتاج دعمًا', '#f2a33a', 50], 3: ['جيد', '#d9b52c', 75], 4: ['متمكّن', '#2f9e6a', 95]};
+const impM = s => (S.logs[s.id] || {}).m || {};
+function skillScores(s, k) { const out = {}; entriesOf(s.id).forEach(e => { if (e.score == null || e.score === '') return; const has = (e.acts || []).some(x => (actOf(x) || {}).c === k) || (e.goals || []).some(g => g.startsWith(k + '-')); if (!has) return; const w = weekOf(e.date); (out[w] = out[w] || []).push(+e.score * 10); }); return out; }
+function impact(s, k) {
+  const m = impM(s), sc = skillScores(s, k), cw = curWeek(), base = pctOf(s, k), pts = [];
+  WEEKS().filter(w => w <= cw).forEach(w => { const r = (m[w] || {})[k], q = sc[w] || [], v = []; if (r) v.push(LVM[r][2]); if (q.length) v.push(q.reduce((x, y) => x + y, 0) / q.length); if (v.length) pts.push({w, r, v: v.reduce((x, y) => x + y, 0) / v.length, q: q.length}); });
+  const last = pts.slice(-2), cur = last.length ? last.reduce((x, y) => x + y.v, 0) / last.length : null, d = cur != null && base != null ? cur - base : null;
+  let dec = ['—', '', 'لم يُقَس بعد']; if (cur != null) { if (cur >= 80) dec = ['✅', 'ok', 'أُتقنت – يُكتفى بالمتابعة والإثراء']; else if (d >= 10) dec = ['📈', 'up', 'أثر إيجابي – استمر في الخطة']; else if (d <= -10) dec = ['🔻', 'dn', 'تراجع – دعم فردي وأنشطة أسهل']; else if (pts.length >= 3) dec = ['⚠️', 'fl', 'لا أثر واضح – غيّر الاستراتيجية']; else dec = ['⏳', 'fl', 'في البداية – واصل القياس']; }
+  return {base, cur, d, pts, dec}; }
+function impactSummary(s) { const ks = KEYS.filter(k => (pctOf(s, k) ?? 0) < 80), I = ks.map(k => impact(s, k)).filter(x => x.d != null);
+  return {n: ks.length, m: I.length, avg: I.length ? I.reduce((x, y) => x + y.d, 0) / I.length : null, up: I.filter(x => x.dec[1] === 'up' || x.dec[1] === 'ok').length, dn: I.filter(x => x.dec[1] === 'dn').length, fl: I.filter(x => x.dec[1] === 'fl').length}; }
+const dTag = d => d == null ? '<span class="dlt">—</span>' : `<span class="dlt ${d >= 5 ? 'p' : d <= -5 ? 'n' : ''}">${d >= 5 ? '▲' : d <= -5 ? '▼' : '●'} ${d > 0 ? '+' : ''}${fmt(d, 0)}</span>`;
+function impactCard(s) {
+  const ws = WEEKS(), cw = curWeek(), w = ws.includes(UI.impW) ? UI.impW : cw, m = impM(s), mw = m[w] || {}, SM = impactSummary(s), i = ws.indexOf(w);
+  const rows = [...KEYS].sort((x, y) => ((pctOf(s, x) ?? 0) >= 80) - ((pctOf(s, y) ?? 0) >= 80)).map(k => { const I = impact(s, k), inPlan = (pctOf(s, k) ?? 0) < 80, q = skillScores(s, k)[w] || [];
+    const dots = ws.filter(x => x <= cw).map(x => { const p = I.pts.find(y => y.w === x); return `<i title="الأسبوع ${x}${p ? ': ' + fmt(p.v, 0) + '%' : ''}" style="background:${p ? LVM[p.v >= 87 ? 4 : p.v >= 65 ? 3 : p.v >= 40 ? 2 : 1][1] : '#e3e9ee'}${x === w ? ';outline:2px solid #14324a' : ''}"></i>`; }).join('');
+    return `<tr class="${inPlan ? '' : 'mst'}"><td class="nm">${ICON[k]} ${COMP[k]}${inPlan ? '' : ' <small>(متقنة)</small>'}</td><td>${fmt(I.base, 0)}%</td>
+    <td><span class="lvb">${[1, 2, 3, 4].map(v => `<button type="button" class="lv${v}${+mw[k] === v ? ' on' : ''}" data-imp="${s.id}|${w}|${k}|${v}" title="${LVM[v][0]}">${v}</button>`).join('')}</span>${q.length ? `<small class="mini2"> أوراق: ${fmt(q.reduce((x, y) => x + y, 0) / q.length / 10, 1)}/١٠</small>` : ''}</td>
+    <td><span class="spk">${dots}</span></td><td><b>${I.cur == null ? '—' : fmt(I.cur, 0) + '%'}</b></td><td>${dTag(I.d)}</td><td class="l"><span class="dec ${I.dec[1]}">${I.dec[0]} ${I.dec[2]}</span></td></tr>`; }).join('');
+  const done = KEYS.filter(k => mw[k]).length;
+  return `<div class="card impc" style="margin-top:14px"><div class="ch"><h3>📈 قياس الأثر – متابعة سريعة</h3><small>اضغط مستوى الطالب الآن في كل مهارة (١ ضعيف · ٢ يحتاج دعمًا · ٣ جيد · ٤ متمكّن) – يُحفظ فورًا، ويُدمج مع درجات أوراق النشاط</small></div><div class="cb">
+  <div class="imps"><div class="ims ${SM.avg == null ? '' : SM.avg >= 5 ? 'p' : SM.avg <= -5 ? 'n' : ''}"><span>متوسط الأثر في مهارات الخطة</span><b>${SM.avg == null ? '—' : (SM.avg > 0 ? '+' : '') + fmt(SM.avg, 0) + ' نقطة'}</b></div><div class="ims"><span>مهارات قيست</span><b>${SM.m} / ${SM.n}</b></div><div class="ims p"><span>تحسّنت / أُتقنت</span><b>${SM.up}</b></div><div class="ims"><span>بلا أثر واضح</span><b>${SM.fl}</b></div><div class="ims n"><span>تراجعت</span><b>${SM.dn}</b></div></div>
+  <div class="impw"><button type="button" class="btn w sm" data-impw="${ws[Math.max(0, i - 1)]}"${i <= 0 ? ' disabled' : ''}>→</button><b>الأسبوع ${w}${w === cw ? ' (الحالي)' : ''}</b><small class="mini2">${weekDate(w) ? 'يبدأ ' + fmtDM(weekDate(w)) : ''} · قيست ${done} / ${KEYS.length}</small><button type="button" class="btn w sm" data-impw="${ws[Math.min(ws.length - 1, i + 1)]}"${i >= ws.length - 1 || w >= cw ? ' disabled' : ''}>←</button><span class="sp"></span><button type="button" class="btn o sm" data-impcopy="${s.id}|${w}" title="انسخ تقييم آخر أسبوع مقيس إلى هذا الأسبوع">⚡ كما الأسبوع السابق</button></div>
+  <div class="tw"><table class="impt"><thead><tr><th class="nm">المهارة</th><th>القبلي</th><th>المستوى هذا الأسبوع</th><th>المسار الأسبوعي</th><th>الحالي</th><th>الأثر</th><th class="nm">القرار المقترح</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="hint">الحالي = متوسط آخر أسبوعين مقيسين (تقدير المعلم ١–٤ = ٢٥٪/٥٠٪/٧٥٪/٩٥٪ مع درجات أوراق النشاط ×١٠). الأثر = الحالي − نسبة الاختبار القبلي.</p></div></div>`; }
+async function impSet(sid, w, k, v) { const L = S.logs[sid] || {e: []}, m = Object.assign({}, L.m || {}), mw = Object.assign({}, m[w] || {}); if (+mw[k] === +v) delete mw[k]; else mw[k] = +v; m[w] = mw; await put('logs', sid, Object.assign({}, L, {m})); render(); }
+async function impCopy(sid, w) { const L = S.logs[sid] || {e: []}, m = Object.assign({}, L.m || {}), prev = WEEKS().filter(x => x < w && m[x] && Object.keys(m[x]).length).pop(); if (!prev) return toast('لا يوجد أسبوع سابق مقيس'); m[w] = Object.assign({}, m[prev]); await put('logs', sid, Object.assign({}, L, {m})); toast('⚡ نُسخ تقييم الأسبوع ' + prev); render(); }
 function vInd() {
   const bar = filterBar(true); const s = S.students[UI.sid];
   if (!s) return bar + '<div class="empty">لا يوجد طلاب بهذا التصفية.</div>';
@@ -1503,6 +1540,7 @@ function vInd() {
   <div class="sub">الكتاب: <b>${BOOKN[book]}</b>${bank ? ' + ' + BOOKN[bank] : ''} · المعلم: <b>${esc(teacherOfCls(s.cls).map(t => t.name).join('، ') || '—')}</b></div></div>
   <div class="ring">${ring(PG.tot ? PG.done / PG.tot * 100 : 0, 86)}<div class="rt"><span>أنشطة الخطة المنجزة: <b>${PG.done} / ${PG.tot}</b></span><span>حضور حصة البرنامج: <b>${attPct(attStats(s.id, 'ses').pct)}</b></span><span>حضور الفسحة: <b>${attPct(attStats(s.id, 'brk').pct)}</b></span></div></div></div>
   <div class="tools pbar"><span class="mini2">🖨️ الطباعة (PDF):</span>${pdfBtn('ind1', 'خطة هذا الطالب')}${pdfBtn('indAll', 'خطط جميع الطلاب في القائمة (' + filtered().length + ')', '')}</div>
+  ${impactCard(s)}
   ${weekPlanCard(s)}
   ${tickPlan(s)}
   <h2 class="sec">📊 مستوى المهارات في الاختبار القبلي <small>المهارة غير المتقنة (أقل من ٨٠٪) تدخل في الخطة الأسبوعية</small></h2>
@@ -1520,7 +1558,7 @@ function vGrp() {
   const gSelIds = UI.gStud && UI.gStudCat === UI.cat ? UI.gStud.filter(id => list.some(s => s.id === id)) : list.map(s => s.id);
   const studChecks = `<div class="wide" style="grid-column:1/-1">${chkList('gStud', list, gSelIds, '👥 الطلاب المشاركون – اضغط المربع بجانب الاسم')}</div>`;
   const prog = list.map(s => { const g = givenSet(s.id), e = entriesOf(s.id), gd = goalsDone(s.id);
-    return `<tr><td class="nm"><button class="lnk" data-open="${s.id}">${esc(s.name)}</button></td><td>${esc(s.cls)}</td><td>${fmt(s.total)}%</td><td>${KEYS.map(k => `<span title="${COMP[k]}">${STARS[startLv(pctOf(s, k))]}</span>`).join(' · ')}</td><td>${(P => P.done + ' / ' + P.tot)(planProg(s))}</td><td>${Object.values(gd).filter(x => x === 'full').length}</td><td>${e.length}</td><td>${esc((e[0] || {}).date || '—')}</td><td>${attPct(attStats(s.id, 'ses').pct)}</td></tr>`; }).join('');
+    return `<tr><td class="nm"><button class="lnk" data-open="${s.id}">${esc(s.name)}</button></td><td>${esc(s.cls)}</td><td>${fmt(s.total)}%</td><td>${KEYS.map(k => `<span title="${COMP[k]}">${STARS[startLv(pctOf(s, k))]}</span>`).join(' · ')}</td><td>${(P => P.done + ' / ' + P.tot)(planProg(s))}</td><td>${Object.values(gd).filter(x => x === 'full').length}</td><td>${e.length}</td><td>${esc((e[0] || {}).date || '—')}</td><td>${attPct(attStats(s.id, 'ses').pct)}</td><td>${(x => x.avg == null ? '—' : dTag(x.avg))(impactSummary(s))}</td></tr>`; }).join('');
   return `<div class="tools"><span class="seg">${CATSV().map(k => `<button type="button" data-cat="${k}" aria-pressed="${k === c}">${CATN[k]}</button>`).join('')}</span>${scopeTag()}<span class="sp">${pdfBtn('grp', 'طباعة خطة الفئة PDF')}</span></div>
   <div class="kpis"><div class="kpi k1"><span>طلاب الفئة</span><b>${list.length}</b></div><div class="kpi k2"><span>متابعات خطة الفئة</span><b>${Object.values(S.glogs).filter(g => +g.cat === c).length}</b></div><div class="kpi k3"><span>الكتاب</span><b style="font-size:17px">${BOOKN[book]}${banks.length ? ' + البنكان' : ''}</b></div><div class="kpi k4"><span>نوع الخطة</span><b style="font-size:17px">${{1: 'إثرائية متقدّمة', 2: 'إثرائية', 3: 'تطويرية', 4: 'علاجية'}[c]}</b></div></div>
   ${catPlanCard(c, list)}
@@ -1531,7 +1569,7 @@ function vGrp() {
   ${prBox('g', list)}
   <label class="wide">🎯 الأهداف (أهداف أخرى تحقّقت في هذه المتابعة) ${msel('gGoals', goalGroups(null), [], 'اختر هدفًا أو أكثر')}</label>
   ${notesBlock('g')}<div><button class="btn" type="button" id="gSave">💾 حفظ متابعة الفئة</button></div></div></div></div>
-  <h2 class="sec">📈 تقدّم طلاب الفئة</h2><div class="tw"><table><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>القبلي</th><th>مستوى البدء (L S W R T)</th><th>الأنشطة</th><th>أهداف متحقّقة</th><th>المتابعات</th><th>آخر متابعة</th><th>حضور الحصة</th></tr></thead><tbody>${prog || '<tr><td colspan="9" class="empty">لا يوجد طلاب في هذه الفئة.</td></tr>'}</tbody></table></div>
+  <h2 class="sec">📈 تقدّم طلاب الفئة</h2><div class="tw"><table><thead><tr><th class="nm">الطالب</th><th>الصف</th><th>القبلي</th><th>مستوى البدء (L S W R T)</th><th>الأنشطة</th><th>أهداف متحقّقة</th><th>المتابعات</th><th>آخر متابعة</th><th>حضور الحصة</th><th>الأثر</th></tr></thead><tbody>${prog || '<tr><td colspan="10" class="empty">لا يوجد طلاب في هذه الفئة.</td></tr>'}</tbody></table></div>
   <h2 class="sec">🗂️ سجل متابعة خطة الفئة</h2>${logTable(Object.values(S.glogs).filter(g => +g.cat === c).sort((a, b) => (b.date || '').localeCompare(a.date || '')), true)}`;
 }
 
@@ -1826,6 +1864,7 @@ function planDoc(s) {
   return docHead('الخطة الفردية للطالب') + `<div class="info"><span>اسم الطالب: <b>${esc(s.name)}</b></span><span>الصف: <b>${esc(clsName(s.cls))}</b></span><span>الفئة: <b>${CATN[c]}</b></span><span>النسبة القبلية: <b>${fmt(s.total)}%</b></span><span>الأنشطة: <b>${esc(GRADEN[gradeOf(s)] || '')}</b></span><span>التاريخ: <b>${today()}</b></span></div>
   <h2>مستوى المهارات في الاختبار القبلي</h2><table><tr><th class="l">الكفاية</th><th>الدرجة القبلية</th><th>النسبة</th><th>المستوى</th><th>الإتقان</th><th>أنشطة الخطة المنجزة</th><th>الأهداف المتحقّقة</th></tr>${comp}</table>
   <h2>الخطة الأسبوعية (حصة واحدة + فسحة واحدة كل أسبوع)</h2><p class="lg2">الأنشطة في المهارات غير المتقنة بحسب درس الأسبوع في الخطة الزمنية · العدد الأسبوعي: حتى ${ns} في الحصة و${nb} في الفسحة · المنجز ${PG.done} من ${PG.tot} · ✓ = أُنجز.</p><table><tr><th style="width:9%">الأسبوع</th><th class="l" style="width:33%">الدرس</th><th class="l">🏫 الحصة (صفي)</th><th class="l">🌙 الفسحة (لا صفي)</th></tr>${wk}</table>
+  <h2>قياس أثر الخطة</h2>${(() => { const SM = impactSummary(s); return `<p class="lg2">متوسط الأثر في مهارات الخطة: <b>${SM.avg == null ? '—' : (SM.avg > 0 ? '+' : '') + fmt(SM.avg, 0) + ' نقطة'}</b> · تحسّنت/أُتقنت: <b>${SM.up}</b> · بلا أثر واضح: <b>${SM.fl}</b> · تراجعت: <b>${SM.dn}</b></p><table><tr><th class="l">المهارة</th><th>القبلي</th><th class="l">المسار (الأسبوع: النسبة)</th><th>الحالي</th><th>الأثر</th><th class="l">القرار</th></tr>${KEYS.map(k => { const I = impact(s, k); return `<tr><td class="l">${COMP[k]}</td><td>${fmt(I.base, 0)}%</td><td class="l">${I.pts.map(p => 'أ' + p.w + ': ' + fmt(p.v, 0) + '%').join(' · ') || '—'}</td><td>${I.cur == null ? '—' : fmt(I.cur, 0) + '%'}</td><td>${I.d == null ? '—' : (I.d > 0 ? '+' : '') + fmt(I.d, 0)}</td><td class="l">${I.dec[0]} ${I.dec[2]}</td></tr>`; }).join('')}</table>`; })()}
   <h2>أهداف الخطة ومدى تحقّقها</h2>${goalsTbl(s)}
   <h2>سجل المتابعة</h2><table><tr><th>التاريخ</th><th>المعلم</th><th class="l">الأنشطة</th><th>التحقّق</th><th class="l">ملاحظات</th></tr>${ents.slice(0, 10).map(e => `<tr><td>${esc(e.date)}</td><td>${esc(tName(e.tid))}</td><td class="l pills2">${(e.acts || []).map(a => `<span>${esc(actLabel(a))}</span>`).join('')}</td><td>${ACH[e.ach] || '—'}</td><td class="l">${esc(noteTxt(e))}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}</table>`
   + docSig(teacherOfCls(s.cls).map(t => t.name).join('، '));
@@ -2575,6 +2614,9 @@ document.addEventListener('click', async ev => {
   if (b.dataset.room != null) { UI.room = b.dataset.room; UI.fCls = ''; UI.attCls = ''; UI.rCls = UI.room; UI.cfCls = UI.room; UI.sid = ''; UI.pStu = []; { const cs = [1, 2, 3, 4].filter(k => ALL().some(s => s.cls === UI.room && catOf(s.total) === k)); if (cs.length) { UI.cat = String(cs[0]); if (UI.pCat !== String(cs[0])) { UI.pCat = String(cs[0]); UI.pPick = new Map(); UI.pAct = new Set(); UI.pSel = null; UI.pMan = []; UI.pBook = String(cs[0]); } } } tab = 'room'; render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.t) { tab = b.dataset.t; if (tab === 'room' && !UI.room) tab = 'classes'; if (UI.room && !GLOBAL_T.includes(tab)) { UI.rCls = UI.room; UI.cfCls = UI.room; if (UI.rep === 'cls' || !UI.rep) UI.rep = UI.rep || 'stu'; } render(); window.scrollTo({top: 0}); return; }
   if (b.dataset.msall != null) { b.closest('.msel').querySelectorAll('.mlist input').forEach(i => i.checked = b.dataset.msall === '1'); updMsel(b.closest('.msel')); return; }
+  if (b.dataset.imp) { const [sid, w, k, v] = b.dataset.imp.split('|'); await impSet(sid, +w, k, +v); return; }
+  if (b.dataset.impw) { UI.impW = +b.dataset.impw; render(); return; }
+  if (b.dataset.impcopy) { const [sid, w] = b.dataset.impcopy.split('|'); await impCopy(sid, +w); return; }
   if (b.dataset.pdoc) { await runPdoc(b.dataset.pdoc, b); return; }
   if (b.dataset.rpar != null) { UI.repPar = b.dataset.rpar === '1'; render(); return; }
   if (b.dataset.stab) { UI.sTab = b.dataset.stab; render(); return; }
