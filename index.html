@@ -1805,7 +1805,7 @@ function vSet() {
   <div class="card" style="margin-top:12px"><div class="ch"><h3>📋 القوائم المنسدلة (الملاحظات والإجراءات والمقترحات)</h3></div><div class="cb"><div class="frm"><label>القائمة<select id="lK">${Object.entries(LISTN).map(([k, v]) => `<option value="${k}"${k === UI.lk ? ' selected' : ''}>${v}</option>`).join('')}</select></label><label>المجموعة<select id="nG">${LIST(UI.lk).map((g, i) => `<option value="${i}">${esc(g.g)}</option>`).join('')}<option value="new">+ مجموعة جديدة…</option></select></label><label class="wide">النص<input type="text" id="nT" placeholder="اكتب الملاحظة أو الإجراء أو المقترح"></label><div><button class="btn sm" id="addN" type="button">➕ إضافة إلى القائمة</button></div></div>
   <div class="tw" style="max-height:320px;overflow:auto;margin-top:8px"><table><tbody>${LIST(UI.lk).map((g, gi) => g.items.map((t, ti) => `<tr><td class="mini2">${esc(g.g)}</td><td class="l">${esc(t)}</td><td><button class="btn r sm" data-del="note:${gi}:${ti}" type="button">حذف</button></td></tr>`).join('')).join('')}</tbody></table></div></div></div></div>`,
   gen: () => `<div class="card" style="margin-top:12px"><div class="ch"><h3>🏫 بيانات عامة</h3></div><div class="cb"><div class="frm"><label>العام الدراسي<input type="text" id="cYear" value="${esc(S.cfg.year)}"></label><label>المدرسة<input type="text" id="cSchool" value="${esc(S.cfg.school)}"></label><label>منسق البرنامج<input type="text" id="cCoord" value="${esc(S.cfg.coord)}"></label><label>مدير المدرسة<input type="text" id="cPrin" value="${esc(S.cfg.principal)}"></label><label>بداية الخطة (أول أيام الأسبوع الثالث)<input type="date" id="cStart" value="${esc(S.cfg.start || '')}"></label><div><button class="btn" id="cSave" type="button">💾 حفظ</button></div></div></div></div>`,
-  look: () => lookCard() + voiceCard(), sch: schedEditor};
+  look: () => lookCard() + recNote(), sch: schedEditor};
   if (!P[UI.sTab]) UI.sTab = 'look';
   return `<div class="tools setnav"><span class="seg">${SET_T.map(([k, n]) => `<button type="button" data-stab="${k}" aria-pressed="${k === UI.sTab}">${n}</button>`).join('')}</span></div>` + P[UI.sTab]();
 }
@@ -2009,8 +2009,8 @@ function lessonDeck(c, w) {
   const ansS = (title, items, note) => S_('ans', 0, '✅ ' + title, `<ol class="rev">${(items.length ? items : ['يقيّم المعلم إجابات الطلاب ويصحّح النطق.']).map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ol>${note ? `<p class="ins">${note}</p>` : ''}<div class="revc"><button class="revb">👁️ إظهار الإجابة التالية</button><button class="reva">إظهار الكل</button><button class="revh">↺ إخفاء</button><span class="revn">0 / ${items.length || 1}</span></div>`);
   // 1 starter (individual) – before the title
   const pics = B.w.filter(x => x[1]).slice(0, 4);
-  S_('starter', 3, '🚀 نشاط استهلالي (فردي): ما اسم الصورة؟', pics.length >= 3 ? `<p class="ins">انظر إلى الصورة، وقل اسمها، ثم اضغطها لترى الكلمة وتسمعها.</p><div class="pics">${pics.map(x => `<button class="pic" data-say="${esc(x[0])}"><i>${x[1]}</i><b>${esc(x[0])}</b></button>`).join('')}</div>`
-    : `<p class="ins">اقرأ الكلمة بصوت هامس، ثم اضغطها لتسمعها وتتأكد من نطقك.</p><div class="exs">${B.w.slice(0, 6).map(x => `<button class="ex" data-say="${esc(x[0])}">${esc(x[0])}</button>`).join('')}</div>`);
+  S_('starter', 3, '🚀 نشاط استهلالي (فردي): ما اسم الصورة؟', pics.length >= 3 ? `<p class="ins">انظر إلى الصورة، وقل اسمها، ثم اضغطها لترى الكلمة، ثم اقرأها مع معلمك.</p><div class="pics">${pics.map(x => `<button class="pic" data-say="${esc(x[0])}"><i>${x[1]}</i><b>${esc(x[0])}</b></button>`).join('')}</div>`
+    : `<p class="ins">اقرأ الكلمة بصوت هامس، ثم اضغطها واستمع إلى نطق معلمك لتتأكد.</p><div class="exs">${B.w.slice(0, 6).map(x => `<button class="ex" data-say="${esc(x[0])}">${esc(x[0])}</button>`).join('')}</div>`);
   // 2 title
   sl.push(`<section class="slide k-title"><div class="stars"></div><div class="tp"><div class="lg">${LOGO}</div><div class="pn"><small>برنامج</small><b>«بالعربية أرتقي»</b><span>للطلاب الناطقين بغير اللغة العربية</span></div></div>
   <div class="tt"><span class="wk">الأسبوع ${w} · الدرس ${li + 1} · الكتاب ص ${esc(L.pg || '')}</span><h1>${esc(L.t || '')}</h1>
@@ -2023,14 +2023,14 @@ function lessonDeck(c, w) {
   // 4 the lesson
   S_('video', 4, '🎬 فيديو الدرس', `${ytid ? `<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/${ytid}" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>` : ''}<div class="anim" id="anim"><div class="ascene" id="ascene"><div class="abig">🎬</div><div class="atxt">اضغط ▶ لتشغيل فيديو الدرس</div></div><div class="actl"><button id="aplay">▶ تشغيل</button><div class="abar"><i id="abar"></i></div></div></div>`);
   const exs = lx.ex || B.w.slice(0, 8).map(x => x[0]);
-  S_('expl', 4, '💡 نتعلّم معًا', `<div class="rule">${lx.r}</div><div class="exs">${exs.map(x => `<button class="ex" data-say="${esc(x)}">${hl(x, li)}</button>`).join('')}</div><p class="ins">اضغط الكلمة لتسمعها، وكرّرها مع المعلم. اللون البرتقالي يدل على المطلوب.</p>`);
+  S_('expl', 4, '💡 نتعلّم معًا', `<div class="rule">${lx.r}</div><div class="exs">${exs.map(x => `<button class="ex" data-say="${esc(x)}">${hl(x, li)}</button>`).join('')}</div><p class="ins">يقرأ المعلم الكلمة، ويكرّرها الطلاب بعده. اللون البرتقالي يدل على المطلوب.</p>`);
   const sents = (B.p || '').split(/(?<=[.؟!])\s+/).filter(Boolean), emo = x => { const b = bareA(x); const f = B.w.find(y => y[1] && b.includes(bareA(y[0]).replace(/^ال/, '').slice(0, 4))); return f ? f[1] : ''; };
   S_('story', 5, `📖 قصة تفاعلية: ${esc(lx.st)}`, `<div class="frames">${sents.map((s, i) => `<div class="frame${i ? '' : ' on'}" data-f="${i}"><div class="fe">${[...new Set(s.split(/\s+/).map(emo).filter(Boolean))].slice(0, 3).join(' ') || '📚'}</div><div class="fs">${s.split(/\s+/).map(x => `<span class="sw${featOf(li, x) ? ' ft' : ''}" data-say="${esc(x)}">${esc(x)}</span>`).join(' ')}</div></div>`).join('')}</div>
   <div class="sctl"><button data-fr="-1">→ السابق</button><span id="fcnt">1 / ${sents.length}</span><button data-fr="1">التالي ←</button><button id="sread">🔊 اقرأ الإطار</button></div><p class="ins">اضغط كل كلمة فيها <b>${LFEAT[li]}</b> لتجمع النجوم ⭐ <b id="sfound">0</b> / <b>${(B.p || '').split(/\s+/).filter(x => featOf(li, x)).length}</b></p>`);
   const stn = skills.map(k => { const who = plan.filter(x => x.A.some(a => a.c === k)).map(x => x.s); return `<div class="stn s${k}"><h3>${GAMES[k][0]} <small>${ICON[k]} ${COMP[k]}</small></h3><p>${GAMES[k][1]}</p><div class="who">${who.map(s => `<span class="ct ct${catOf(s.total)}">${nm2(s)}</span>`).join('') || '<span>جميع الطلاب</span>'}</div></div>`; }).join('');
   S_('moves', 3, '🏃 محطات الألعاب الحركية – بحسب مهارات كل طالب', `<div class="stns">${stn}</div><div class="tpr">🤸 حركة الدرس: ${lx.tpr}</div>`);
   const gw = [...B.w.map(x => [x[0], x[1], 1]), ...dist.slice(0, 8).map(x => [x[0], x[1], 0])];
-  S_('runner', 2, '🎲 مولّد اللعبة الحركية', `<div class="run"><div class="rw" id="rw"><i>🎲</i><b>اضغط «كلمة جديدة»</b></div><div class="rctl"><button id="rnext">🎲 كلمة جديدة</button><button id="rsay">🔊 استمع</button><button id="rans">✔ الإجابة</button><span class="rt" id="rt">10</span></div><div class="ra" id="ra"></div></div><p class="ins">${li >= 3 ? `هل في الكلمة <b>${LFEAT[li]}</b>؟ نعم ← الحركة المتفق عليها، لا ← نبقى ثابتين.` : 'قل الكلمة وتحرّك بحسب حركة الدرس.'}</p>`);
+  S_('runner', 2, '🎲 مولّد اللعبة الحركية', `<div class="run"><div class="rw" id="rw"><i>🎲</i><b>اضغط «كلمة جديدة»</b></div><div class="rctl"><button id="rnext">🎲 كلمة جديدة</button><button id="rsay">🗣️ يقرأ المعلم</button><button id="rans">✔ الإجابة</button><span class="rt" id="rt">10</span></div><div class="ra" id="ra"></div></div><p class="ins">${li >= 3 ? `هل في الكلمة <b>${LFEAT[li]}</b>؟ نعم ← الحركة المتفق عليها، لا ← نبقى ثابتين.` : 'قل الكلمة وتحرّك بحسب حركة الدرس.'}</p>`);
   // 5 activities: questions slide (timer) → answers slide (one by one)
   const groups = []; skills.forEach(k => { const key = g + ':' + (li * 5 + KEYS.indexOf(k) + 1); if (li < 0 || !actOf(key)) return; const lv = [...new Set(cats.map(x => LVLC[x.k][2]))].sort(); (lv.length ? lv : [0]).forEach(qi => groups.push({k, key, qi})); });
   const gmin = Math.max(1, Math.min(4, Math.floor(12 / Math.max(1, groups.length) * 2) / 2));
@@ -2050,7 +2050,7 @@ function lessonDeck(c, w) {
   const wsheets = skills.map(k => { const key = g + ':' + (li * 5 + KEYS.indexOf(k) + 1), a = actOf(key) || {}, who = plan.filter(x => x.A.some(y => y.key === key)).map(x => x.s); return `<div class="wsh"><b>${ICON[k]} ورقة النشاط ${a.n || ''}: ${esc(a.t || '')}</b><div class="who">${who.map(s => `<span class="ct ct${catOf(s.total)}">${nm2(s)}</span>`).join('') || '<span>—</span>'}</div></div>`; }).join('');
   S_('indv', 4, '📄 تقويم فردي: أوراق النشاط', `<div class="wshs">${wsheets}</div><p class="ins">يحلّ كل طالب ورقة نشاطه بمفرده (تُطبع من «🖨️ طباعة الأنشطة» – الأسبوع ${w})، فيتحقّق هدفها تلقائيًّا في خطته الفردية.</p>`);
   // 7 game + closing summary
-  S_('game', 2, `🎮 لعبة: اصطد ${li >= 3 ? 'كلمات ' + LFEAT[li] : 'الكلمة'}`, `<div class="gm"><div class="gq" id="gq">${li >= 3 ? `اضغط الفقاعات التي فيها <b>${LFEAT[li]}</b>` : 'اضغط 🔊 ثم اصطد الكلمة التي تسمعها'}</div><div class="bub" id="bub"></div><div class="gctl"><button id="gstart">▶ ابدأ اللعبة</button><span>⭐ <b id="gsc">0</b></span></div></div>`);
+  S_('game', 2, `🎮 لعبة: اصطد ${li >= 3 ? 'كلمات ' + LFEAT[li] : 'الكلمة'}`, `<div class="gm"><div class="gq" id="gq">${li >= 3 ? `اضغط الفقاعات التي فيها <b>${LFEAT[li]}</b>` : 'يقول المعلم كلمة، فاصطدها!'}</div><div class="bub" id="bub"></div><div class="gctl"><button id="gstart">▶ ابدأ اللعبة</button><span>⭐ <b id="gsc">0</b></span></div></div>`);
   const sumPts = [lx.r.replace(/<[^>]+>/g, ''), 'أمثلة من درسنا: ' + B.w.slice(0, 4).map(x => x[0]).join('، '), ...skills.map(k => '✔ ' + ((goalOf(k + '-' + (li + 1)) || {}).t || ''))];
   S_('close', 3, '🧩 نشاط ختامي: ماذا تعلّمنا اليوم؟', `<ol class="rev sum">${sumPts.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ol><div class="revc"><button class="revb">👁️ النقطة التالية</button><button class="reva">إظهار الكل</button><span class="revn">0 / ${sumPts.length}</span></div>
   <div class="exit"><div class="eq">🎫 بطاقة الخروج: ${li >= 3 ? `اكتب كلمة فيها <b>${LFEAT[li]}</b>، واقرأها لمعلمك.` : li === 1 ? 'اكتب ثلاثة حروف متتالية، واقرأها لمعلمك.' : 'اكتب كلمة من الدرس، وضع حركاتها، واقرأها.'} ثم أكمل: «تعلّمتُ اليومَ أنّ …»</div><div class="smi"><button>😃<b>فهمت جيدًا</b></button><button>🙂<b>فهمت قليلًا</b></button><button>🤔<b>أحتاج مساعدة</b></button></div></div>`);
@@ -2065,7 +2065,7 @@ function lessonDeck(c, w) {
   const data = {vsc, li, feat: LFEAT[li], words: gw, sents, frx: FEATRX[li] || '', ex: exs, rule: lx.r.replace(/<[^>]+>/g, ''), title: L.t || '', bank: B.w, tv: LTV[li] || L.t || '', rv: LRV[li] || '', vk: LK + '-voice'};
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(L.t || 'درس')} – ${esc(clsName(c))}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet"><style>${ACT_CSS}${DECK_CSS}</style></head><body><div id="stage">${sl.join('')}</div>
-<nav class="dnv"><button id="prv">→</button><span id="cnt"></span><button id="nxt">←</button><button id="fs">⛶</button><button id="mute" title="كتم الصوت / تشغيله">🔊</button><button id="recb" title="سجّل نطقك بصوتك (يُحفظ على هذا الجهاز)">🎙️<sup id="recn"></sup></button><label class="vl">🔊 <select id="vsel" title="صوت القراءة"></select></label></nav>
+<nav class="dnv"><button id="prv">→</button><span id="cnt"></span><button id="nxt">←</button><button id="fs">⛶</button><button id="mute" title="كتم الصوت / تشغيله">🔊</button><button id="recb" title="سجّل نطقك بصوتك (يُحفظ على هذا الجهاز)">🎙️<sup id="recn"></sup></button></nav>
 <script>const D=${JSON.stringify(data).replace(/</g, '\\u003c')};${DECK_JS}<\/script></body></html>`;
 }
 function phon(t){const SUN='تثدذرزسشصضطظلن',L=/[ء-ي]/;const toks=String(t).split(/(\s+)/);const out=[];let first=true;
@@ -2154,7 +2154,7 @@ button{font-family:inherit;cursor:pointer}
 const DECK_JS = `
 const sl=[...document.querySelectorAll('.slide')];let cur=0;
 function fit(){const s=Math.min(innerWidth/1300,(innerHeight-60)/740);document.getElementById('stage').style.transform='translate(-50%,-54%) scale('+s+')';}
-function go(i){cur=Math.max(0,Math.min(sl.length-1,i));sl.forEach((x,j)=>x.classList.toggle('on',j===cur));document.getElementById('cnt').textContent=(cur+1)+' / '+sl.length;try{speechSynthesis.cancel()}catch(e){}}
+function go(i){cur=Math.max(0,Math.min(sl.length-1,i));sl.forEach((x,j)=>x.classList.toggle('on',j===cur));document.getElementById('cnt').textContent=(cur+1)+' / '+sl.length;try{if(RAU)RAU.pause()}catch(e){}}
 addEventListener('resize',fit);fit();go(0);
 document.getElementById('nxt').onclick=()=>go(cur+1);document.getElementById('prv').onclick=()=>go(cur-1);
 document.getElementById('fs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
@@ -2185,11 +2185,11 @@ rdb().then(db=>{if(!db)return;try{const st=db.transaction('a').objectStore('a'),
 function rput(k,b){REC.set(k,b);try{RDB.transaction('a','readwrite').objectStore('a').put(b,k)}catch(e){}rmark()}
 function rdel(k){REC.delete(k);try{RDB.transaction('a','readwrite').objectStore('a').delete(k)}catch(e){}rmark()}
 function rmark(){document.querySelectorAll('[data-say]').forEach(x=>x.classList.toggle('hasrec',REC.has(RK(x.dataset.say))));const n=document.getElementById('recn');if(n)n.textContent=REC.size||''}
-function playRec(k){const o={};try{if(RAU)RAU.pause();speechSynthesis.cancel()}catch(e){}const a=new Audio(URL.createObjectURL(REC.get(k)));RAU=a;a.onended=()=>o.onend&&o.onend();a.onerror=()=>o.onerror&&o.onerror();a.play().catch(()=>o.onerror&&o.onerror());return o}
-function say(t,r){if(VP.m){try{speechSynthesis.cancel();if(RAU)RAU.pause()}catch(e){}return null}const k=RK(t);if(REC.has(k))return playRec(k);try{if(RAU)RAU.pause()}catch(e){}try{const u=new SpeechSynthesisUtterance(spk(t));u.lang='ar-SA';const v=bestV();if(v){u.voice=v;u.lang=v.lang}u.rate=(r||.85)*(VP.r||1);u.pitch=1;speechSynthesis.cancel();speechSynthesis.speak(u);return u}catch(e){return null}}
-function vsel(){const s=document.getElementById('vsel');if(!s)return;const vs=arVoices(),b=bestV();s.innerHTML=vs.length?vs.map(v=>'<option'+(b&&v.name===b.name?' selected':'')+'>'+v.name+'</option>').join(''):'<option>لا يوجد صوت عربي في الجهاز</option>';}
-try{speechSynthesis.onvoiceschanged=vsel}catch(e){}
-const mb=document.getElementById('mute');const mset=()=>{mb.textContent=VP.m?'🔇':'🔊';mb.classList.toggle('off',!!VP.m)};mset();mb.onclick=()=>{VP.m=!VP.m;try{localStorage.setItem(D.vk,JSON.stringify(VP))}catch(x){}if(VP.m){try{speechSynthesis.cancel()}catch(e){}}mset()};
+function playRec(k){const o={};try{if(RAU)RAU.pause()}catch(e){}const a=new Audio(URL.createObjectURL(REC.get(k)));RAU=a;a.onended=()=>o.onend&&o.onend();a.onerror=()=>o.onerror&&o.onerror();a.play().catch(()=>o.onerror&&o.onerror());return o}
+function say(t,r){try{if(RAU)RAU.pause()}catch(e){}if(VP.m)return null;const k=RK(t);if(REC.has(k))return playRec(k);return null}
+function vsel(){}
+
+const mb=document.getElementById('mute');const mset=()=>{mb.textContent=VP.m?'🔇':'🔊';mb.classList.toggle('off',!!VP.m)};mset();mb.onclick=()=>{VP.m=!VP.m;try{localStorage.setItem(D.vk,JSON.stringify(VP))}catch(x){}if(VP.m){try{if(RAU)RAU.pause()}catch(e){}}mset()};
 addEventListener('keydown',e=>{if(e.key==='m'||e.key==='M')mb.click()});setTimeout(vsel,300);
 document.addEventListener('change',e=>{if(e.target.id==='vsel'){VP.n=e.target.value;try{localStorage.setItem(D.vk,JSON.stringify(VP))}catch(x){}say('مَرْحَبًا، هَذَا صَوْتُ الدَّرْسِ.')}});
 const bare=w=>String(w).replace(/[\\u064b-\\u0652\\u0640.،؟!«»]/g,'');
@@ -2226,7 +2226,7 @@ addEventListener('keydown',e=>{if(e.key==='Enter'){const b=document.querySelecto
 (()=>{const b=document.getElementById('aplay');if(!b)return;const sc=document.getElementById('ascene'),bar=document.getElementById('abar'),scenes=D.vsc||[];
  const speak=t=>new Promise(r=>{const u=say(t,.78);let done=false;const fin=()=>{if(!done){done=true;r()}};if(u){u.onend=fin;u.onerror=fin}setTimeout(fin,VP.m?1800:Math.max(2200,String(t).length*140))});
  const wait=ms=>new Promise(r=>setTimeout(r,ms));let run=false;
- b.onclick=async()=>{if(run){run=false;try{speechSynthesis.cancel()}catch(e){}b.textContent='▶ تشغيل';return}run=true;b.textContent='⏸ إيقاف';
+ b.onclick=async()=>{if(run){run=false;try{if(RAU)RAU.pause()}catch(e){}b.textContent='▶ تشغيل';return}run=true;b.textContent='⏸ إيقاف';
   for(let i=0;i<scenes.length&&run;i++){const x=scenes[i];sc.innerHTML='<div class="abig">'+x.e+'</div><div class="atxt'+(x.w?' aw':'')+'">'+x.t+'</div><div class="acap"></div>';sc.style.animation='none';void sc.offsetWidth;sc.style.animation='';bar.style.width=((i+1)/scenes.length*100)+'%';
    const cap=sc.querySelector('.acap'),shown=sc.querySelector('.atxt').textContent.replace(/\\s+/g,' ').trim();for(const t of x.s){if(!run)break;cap.textContent=t;cap.style.visibility=shown.includes(t.replace(/\\s+/g,' ').trim())?'hidden':'visible';await speak(t);await wait(x.w?700:450)}await wait(500);}
   run=false;b.textContent='↻ إعادة';};})();
@@ -2239,9 +2239,9 @@ addEventListener('keydown',e=>{if(e.key==='Enter'){const b=document.querySelecto
 (()=>{const st=document.getElementById('gstart');if(!st)return;const box=document.getElementById('bub'),sc=document.getElementById('gsc');let tgt=null;
  st.onclick=()=>{box.innerHTML='';sc.textContent='0';const pool=[...D.words].sort(()=>Math.random()-.5).slice(0,8);
   pool.forEach((w,i)=>{const b=document.createElement('button');b.className='bb';b.textContent=w[0];b.style.left=(4+(i%4)*24)+'%';b.style.top=(8+Math.floor(i/4)*48)+'%';b.style.animationDelay=(i*.3)+'s';b.dataset.w=w[0];box.appendChild(b);});
-  if(D.li<3){tgt=pool.filter(w=>w[2])[0]||pool[0];setTimeout(()=>say(tgt[0]),400);document.getElementById('gq').innerHTML='اصطد الكلمة التي تسمعها <button id="gsay" style="font-size:20px">🔊</button>';}};
+  if(D.li<3){tgt=pool.filter(w=>w[2])[0]||pool[0];setTimeout(()=>say(tgt[0]),400);document.getElementById('gq').innerHTML='يقول المعلم كلمة، فاصطدها! <button id="gsay" style="font-size:16px">👁️ كلمة المعلم</button>';}};
  box.addEventListener('click',e=>{const b=e.target.closest('.bb');if(!b)return;say(b.dataset.w);const ok=D.li>=3?isF(b.dataset.w):(tgt&&b.dataset.w===tgt[0]);if(ok){b.classList.add('good');sc.textContent=+sc.textContent+1;if(D.li<3){setTimeout(()=>{const r=[...box.querySelectorAll('.bb:not(.good)')];const p=D.words.find(w=>r.some(x=>x.dataset.w===w[0])&&w[2]);if(p){tgt=p;say(p[0])}},900)}}else{b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad')}});
- document.addEventListener('click',e=>{if(e.target.id==='gsay'&&tgt)say(tgt[0])});})();
+ document.addEventListener('click',e=>{if(e.target.id==='gsay'&&tgt){if(!say(tgt[0]))toast('🗣️ قل للطلاب: «'+tgt[0]+'»')}});})();
 `;
 function vLes() { const cls = UI.room ? [UI.room] : TCLS(), cw = curWeek(), w = UI.lw || cw;
   const one = UI.room && UI.lsel !== 'all';
@@ -2254,10 +2254,11 @@ function vLes() { const cls = UI.room ? [UI.room] : TCLS(), cw = curWeek(), w = 
   <div class="tools"><button class="btn" id="lesShow" type="button">▶ عرض الدرس بملء الشاشة</button><button class="btn w" id="lesDl" type="button">⬇️ تنزيل الدرس (HTML)</button><button class="btn w" id="lesPr" type="button">🖨️ طباعة الشرائح / PDF</button>
   <label class="sp">🎬 رابط فيديو يوتيوب للدرس (اختياري) <input type="url" id="lesVid" value="${esc((S.cfg.tlVid || {})[L.id] || '')}" placeholder="https://youtu.be/..." style="width:240px"></label></div>
   <div class="lesfr"><iframe id="lesFrame" title="الدرس" allow="fullscreen; autoplay; microphone"></iframe></div>
-  <p class="hint">يتضمن الدرس: صفحة العنوان (اسم البرنامج والصف والفئات) · قواعد الحصة · نشاط تمهيدي · الأهداف · 🎬 فيديو متحرك مسموع للدرس · الشرح · 📖 قصة تفاعلية · 🏃 محطات ألعاب حركية بحسب مهارات كل طالب · 🎲 مولّد اللعبة الحركية · 👥 نشاط جماعي متدرّج لكل فئة من أسئلة أنشطة الصف · 📝 تقويم فردي · 🎮 لعبة «اصطد الكلمة» · 🎫 بطاقة الخروج. التنقل بالأسهم أو الأزرار أسفل العرض، والصوت بقراءة آلية عربية (حسب الجهاز).</p></div></section>`; }
+  <p class="hint">يتضمن الدرس: صفحة العنوان (اسم البرنامج والصف والفئات) · قواعد الحصة · نشاط تمهيدي · الأهداف · 🎬 فيديو متحرك مسموع للدرس · الشرح · 📖 قصة تفاعلية · 🏃 محطات ألعاب حركية بحسب مهارات كل طالب · 🎲 مولّد اللعبة الحركية · 👥 نشاط جماعي متدرّج لكل فئة من أسئلة أنشطة الصف · 📝 تقويم فردي · 🎮 لعبة «اصطد الكلمة» · 🎫 بطاقة الخروج. التنقل بالأسهم أو الأزرار أسفل العرض، والنطق بصوت المعلم: يُقرأ مباشرة، أو يُسجَّل مرة واحدة بزر 🎙️ فيُسمع عند الضغط على الكلمة.</p></div></section>`; }
 function fillLes() { const f = $('#lesFrame'); if (!f) return; const cls = UI.room ? [UI.room] : TCLS(); const c = UI.lc && cls.includes(UI.lc) ? UI.lc : cls[0]; if (!c) return; f.srcdoc = lessonDeck(c, UI.lw || curWeek()); }
 function lesCur() { const cls = UI.room ? [UI.room] : TCLS(); const c = UI.lc && cls.includes(UI.lc) ? UI.lc : cls[0]; return {c, w: UI.lw || curWeek()}; }
 
+function recNote() { return `<div class="card" style="margin-top:12px"><div class="ch"><h3>🎙️ النطق في الدروس</h3><small>بلا صوت آلي</small></div><div class="cb"><p class="mini2">أُزيل الصوت الآلي من الدروس. ينطق المعلم الكلمات بنفسه، أو يسجّل نطقه مرة واحدة: داخل الدرس اضغط زر 🎙️ في الشريط السفلي، ثم اضغط الحرف أو الكلمة وانطقها، واضغطها مرة أخرى للحفظ؛ فيُسمع صوتك كلما ضُغطت (Shift + ضغط يحذف التسجيل). تُحفظ التسجيلات على هذا الجهاز والمتصفح.</p></div></div>`; }
 function voiceCard() { return `<div class="card" style="margin-top:12px"><div class="ch"><h3>🔊 صوت القراءة في الدروس</h3><small>يُستخدم في الفيديو والقصص والألعاب · يُحفظ على هذا الجهاز</small></div><div class="cb"><div class="frm">
   <label>الصوت<select id="vVoice"></select></label><label>السرعة<select id="vRate">${[['0.8', 'أبطأ'], ['0.9', 'بطيئة'], ['1', 'عادية'], ['1.1', 'أسرع']].map(([v, t]) => `<option value="${v}"${String(voicePref().r || 1) === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
   <div><button class="btn sm" id="vTest" type="button">🔊 تجربة</button></div></div>
