@@ -2068,6 +2068,15 @@ function lessonDeck(c, w) {
 <nav class="dnv"><button id="prv">→</button><span id="cnt"></span><button id="nxt">←</button><button id="fs">⛶</button><button id="mute" title="كتم الصوت / تشغيله">🔊</button><label class="vl">🔊 <select id="vsel" title="صوت القراءة"></select></label></nav>
 <script>const D=${JSON.stringify(data).replace(/</g, '\\u003c')};${DECK_JS}<\/script></body></html>`;
 }
+function phon(t){const SUN='تثدذرزسشصضطظلن',L=/[ء-ي]/;const toks=String(t).split(/(\s+)/);const out=[];let first=true;
+ for(const tk of toks){if(!tk||/^\s+$/.test(tk)){out.push(tk);continue}let w=tk;
+  const m=w.match(/^([«"(]*)([وفبك][َِ]?)?ال([ء-ي])(.*)$/);
+  if(m){const q=m[1],pre=m[2]||'',c=m[3];let rest=m[4].replace(/^([ً-ِ]?)ّ/,'$1').replace(/^ّ/,'').replace(/^ْ/,'');let core;
+   if(SUN.includes(c))core=c+'ْ'+c+rest;else core='لْ'+c+rest;
+   if(pre)w=q+pre+core;else if(first)w=q+'أَ'+core;else{let k=out.length-1;while(k>=0&&/^\s+$/.test(out[k]))k--;if(k>=0){out.length=k+1;out[k]=out[k].replace(/[.،؛:!؟]$/,'');w=core}else w=q+'أَ'+core}}
+  w=w.replace(/([ء-ي])ّ([ً-ِ]?)/g,'$1ْ$1$2').replace(/([ء-ي])([ً-ِ])ّ/g,'$1ْ$1$2');
+  out.push(w);first=false}
+ return out.join('')}
 const bareA = w => String(w).replace(/[\u064b-\u0652\u0640.،؟!«»]/g, '');
 function featOf(li, w) { const x = String(w).replace(/[.،؟!«»]/g, ''), y = x.replace(/\u0651/g, ''), m = x.match(/^(?:[وفب]\u064e?)?ال(.)/);
   if (li === 7) return !!m && !'تثدذرزسشصضطظلن'.includes(m[1]); if (li === 8) return !!m && 'تثدذرزسشصضطظلن'.includes(m[1]);
@@ -2154,13 +2163,22 @@ let VP={};try{VP=JSON.parse(localStorage.getItem(D.vk)||'{}')}catch(e){}
 function vScore(v){let s=0;if(/natural|online|neural|premium|enhanced/i.test(v.name))s+=10;if(/google/i.test(v.name))s+=5;if(/hamed|zariyah|shakir|hamdan|fatima|salma|laila|maged|tarik|naayf|majed/i.test(v.name))s+=3;if(/^ar-SA/i.test(v.lang))s+=1;return s}
 function arVoices(){try{return speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang)).sort((a,b)=>vScore(b)-vScore(a))}catch(e){return[]}}
 function bestV(){const vs=arVoices();return vs.find(v=>v.name===VP.n)||vs[0]||null}
+function phon(t){const SUN='تثدذرزسشصضطظلن',L=/[ء-ي]/;const toks=String(t).split(/(\\s+)/);const out=[];let first=true;
+ for(const tk of toks){if(!tk||/^\\s+$/.test(tk)){out.push(tk);continue}let w=tk;
+  const m=w.match(/^([«"(]*)([وفبك][َِ]?)?ال([ء-ي])(.*)$/);
+  if(m){const q=m[1],pre=m[2]||'',c=m[3];let rest=m[4].replace(/^([ً-ِ]?)ّ/,'$1').replace(/^ّ/,'').replace(/^ْ/,'');let core;
+   if(SUN.includes(c))core=c+'ْ'+c+rest;else core='لْ'+c+rest;
+   if(pre)w=q+pre+core;else if(first)w=q+'أَ'+core;else{let k=out.length-1;while(k>=0&&/^\\s+$/.test(out[k]))k--;if(k>=0){out.length=k+1;out[k]=out[k].replace(/[.،؛:!؟]$/,'');w=core}else w=q+'أَ'+core}}
+  w=w.replace(/([ء-ي])ّ([ً-ِ]?)/g,'$1ْ$1$2').replace(/([ء-ي])([ً-ِ])ّ/g,'$1ْ$1$2');
+  out.push(w);first=false}
+ return out.join('')}
 const LN={'ا':'أَلِف','أ':'أَلِف','ب':'بَاء','ت':'تَاء','ث':'ثَاء','ج':'جِيم','ح':'حَاء','خ':'خَاء','د':'دَال','ذ':'ذَال','ر':'رَاء','ز':'زَاي','س':'سِين','ش':'شِين','ص':'صَاد','ض':'ضَاد','ط':'طَاء','ظ':'ظَاء','ع':'عَيْن','غ':'غَيْن','ف':'فَاء','ق':'قَاف','ك':'كَاف','ل':'لَام','م':'مِيم','ن':'نُون','ه':'هَاء','و':'وَاو','ي':'يَاء'};
 function spk(t){t=String(t).replace(/[«»]/g,'').trim();const b=t.replace(/[\u0640\\s]/g,'');
  if(/^[\u0621-\u064a]$/.test(b))return LN[b]||b;
  let m=b.match(/^([\u0621-\u064a])([\u064e\u064f\u0650])$/);if(m)return m[1]+m[2]+'هْ';
  m=b.match(/^([\u0621-\u064a])\u0652$/);if(m)return 'أَ'+m[1]+'ْ';
  m=b.match(/^([\u0621-\u064a])\\1\\1\\1?$/);if(m)return LN[m[1]]||m[1];
- return t;}
+ return phon(t);}
 function say(t,r){if(VP.m){try{speechSynthesis.cancel()}catch(e){}return null}try{const u=new SpeechSynthesisUtterance(spk(t));u.lang='ar-SA';const v=bestV();if(v){u.voice=v;u.lang=v.lang}u.rate=(r||.85)*(VP.r||1);u.pitch=1;speechSynthesis.cancel();speechSynthesis.speak(u);return u}catch(e){return null}}
 function vsel(){const s=document.getElementById('vsel');if(!s)return;const vs=arVoices(),b=bestV();s.innerHTML=vs.length?vs.map(v=>'<option'+(b&&v.name===b.name?' selected':'')+'>'+v.name+'</option>').join(''):'<option>لا يوجد صوت عربي في الجهاز</option>';}
 try{speechSynthesis.onvoiceschanged=vsel}catch(e){}
@@ -2236,7 +2254,7 @@ function fillVoices() { const s = $('#vVoice'); if (!s) return; const vs = arVoi
   s.innerHTML = vs.length ? vs.map(v => `<option${cur && v.name === cur.name ? ' selected' : ''}>${esc(v.name)}</option>`).join('') : '<option>لا يوجد صوت عربي في هذا الجهاز/المتصفح</option>';
   const i = $('#vInfo'); if (i) i.textContent = vs.length ? `الأصوات العربية المتاحة: ${vs.length} · ${vs.some(v => /natural|online|neural/i.test(v.name)) ? '✓ يوجد صوت طبيعي (Natural)' : 'لا يوجد صوت «Natural» – جرّب متصفح Edge'}` : ''; }
 try { speechSynthesis.onvoiceschanged = () => fillVoices(); } catch (e) {}
-function sayApp(t) { try { const P = voicePref(), v = arVoicesApp().find(x => x.name === P.n) || arVoicesApp()[0]; const u = new SpeechSynthesisUtterance(t); u.lang = 'ar-SA'; if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.85 * (+P.r || 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
+function sayApp(t) { try { const P = voicePref(), v = arVoicesApp().find(x => x.name === P.n) || arVoicesApp()[0]; const u = new SpeechSynthesisUtterance(phon(t)); u.lang = 'ar-SA'; if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.85 * (+P.r || 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
 
 /* ---------- schedule page ---------- */
 function vSched() {
