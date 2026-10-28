@@ -793,6 +793,8 @@ table.lest td,table.lest th{text-align:center;vertical-align:middle}
 .lesx{right:auto;left:12px}
 .lesb.sm{font-size:15px;padding:2px 8px}.lesb.sm small{letter-spacing:0;font-size:10.5px}
 .lesx.lesp{left:120px;background:#ffd34e}.lesx.lesd{left:290px}
+.plov{display:flex;flex-direction:column}.plov iframe{flex:1;height:auto;background:#fff8ec}
+.plbar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#0b6e75;color:#fff;flex-wrap:wrap}.plbar span{flex:1}.plbar button{font:inherit;font-weight:800;border:0;border-radius:999px;padding:6px 14px;background:#fff;color:#0b6e75;cursor:pointer}.plbar .plpdf{background:#ffd34e;color:#1d2b3a}.plbar b{font-size:15px}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -2370,6 +2372,22 @@ function fillVoices() { const s = $('#vVoice'); if (!s) return; const vs = arVoi
   s.innerHTML = vs.length ? vs.map(v => `<option${cur && v.name === cur.name ? ' selected' : ''}>${esc(v.name)}</option>`).join('') : '<option>لا يوجد صوت عربي في هذا الجهاز/المتصفح</option>';
   const i = $('#vInfo'); if (i) i.textContent = vs.length ? `الأصوات العربية المتاحة: ${vs.length} · ${vs.some(v => /natural|online|neural/i.test(v.name)) ? '✓ يوجد صوت طبيعي (Natural)' : 'لا يوجد صوت «Natural» – جرّب متصفح Edge'}` : ''; }
 try { speechSynthesis.onvoiceschanged = () => fillVoices(); } catch (e) {}
+
+const loadJs = src => new Promise((ok, no) => { if (document.querySelector('script[src="' + src + '"]')) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+async function planPdf(f, name) {
+  await loadJs('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'); await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  const d = f.contentDocument; try { await d.fonts.ready; } catch (e) {}
+  const pdf = new window.jspdf.jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'}), PW = 297, PH = 210, M = 5, IW = PW - 2 * M, IH = PH - 2 * M; let first = true;
+  for (const sh of d.querySelectorAll('.sheet')) {
+    const cv = await html2canvas(sh, {scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: d.documentElement.scrollWidth});
+    const top0 = sh.getBoundingClientRect().top, k = cv.width / sh.getBoundingClientRect().width, pxPerMm = cv.width / IW, pageH = IH * pxPerMm;
+    const cuts = [...sh.querySelectorAll('.hd,.lesson,.row,table.m tr,.kg,.kc,.foot2')].map(e => Math.round((e.getBoundingClientRect().bottom - top0 + 3) * k)).filter(y => y > 0 && y <= cv.height).sort((x, y) => x - y);
+    let y = 0; while (y < cv.height - 4) { let e = Math.min(cv.height, y + pageH); if (e < cv.height) { const c2 = cuts.filter(z => z > y + 40 && z <= e); if (c2.length) e = c2[c2.length - 1]; }
+      const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = e - y; pc.getContext('2d').drawImage(cv, 0, y, cv.width, e - y, 0, 0, cv.width, e - y);
+      if (!first) pdf.addPage(); first = false; pdf.addImage(pc.toDataURL('image/jpeg', 0.92), 'JPEG', M, M, IW, (e - y) / pxPerMm); y = e; }
+  }
+  pdf.save(name);
+}
 function sayApp(t) { try { const P = voicePref(), v = arVoicesApp().find(x => x.name === P.n) || arVoicesApp()[0]; const u = new SpeechSynthesisUtterance(phon(t)); u.lang = 'ar-SA'; if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.85 * (+P.r || 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
 
 /* ---------- schedule page ---------- */
@@ -2576,7 +2594,15 @@ document.addEventListener('click', async ev => {
   if (b.id === 'vTest') { sayApp('ذَهَبَ الوَلَدُ إِلَى المَدْرَسَةِ، وَقَرَأَ الكِتَابَ بِصَوْتٍ وَاضِحٍ.'); return; }
   if (b.dataset.les) { const [c, w] = b.dataset.les.split('|'); UI.lc = c; UI.lw = +w; if (tab !== 'les') { tab = 'les'; if (UI.room && UI.room !== c) UI.room = c; } render(); if (b.closest('.wplan')) window.scrollTo({top: 0}); return; }
   if (b.id === 'lesShow') { const {c, w} = lesCur(); if (!c) return; const o = document.createElement('div'); o.className = 'lesov'; o.innerHTML = '<button class="lesx" type="button">✕ إغلاق</button><iframe allow="fullscreen; autoplay"></iframe>'; document.body.appendChild(o); o.querySelector('iframe').srcdoc = lessonDeck(c, w); o.querySelector('.lesx').onclick = () => o.remove(); return; }
-  if (b.id === 'lesPlan') { const {c, w} = lesCur(); if (!c) return; const h = lessonDeck(c, w, 'plan'), o = document.createElement('div'); o.className = 'lesov'; o.innerHTML = '<button class="lesx" type="button">✕ إغلاق</button><button class="lesx lesp" type="button">🖨️ طباعة الخطة</button><button class="lesx lesd" type="button">⬇️ تنزيل</button><iframe></iframe>'; document.body.appendChild(o); const f = o.querySelector('iframe'); f.srcdoc = h; o.querySelector('.lesx').onclick = () => o.remove(); o.querySelector('.lesp').onclick = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }; o.querySelector('.lesd').onclick = () => saveFile(('خطة_درس_الأسبوع_' + w + '_' + c).replace(/[\/\s]+/g, '_') + '.html', h, 'text/html'); return; }
+  if (b.id === 'lesPlan') { const {c, w} = lesCur(); if (!c) { toast('اختر الصف أولًا'); return; } let h; try { h = lessonDeck(c, w, 'plan'); } catch (e) { toast('تعذّر إنشاء الخطة: ' + (e.message || e)); return; }
+    const nm = ('خطة_درس_الأسبوع_' + w + '_' + c).replace(/[\/\s]+/g, '_'), o = document.createElement('div'); o.className = 'lesov plov';
+    o.innerHTML = '<div class="plbar"><button type="button" class="plx">✕ إغلاق</button><b>📋 خطة الدرس – ' + esc(clsName(c)) + ' – الأسبوع ' + w + '</b><span></span><button type="button" class="plpdf">📄 تنزيل PDF بالعرض</button><button type="button" class="plp">🖨️ طباعة</button><button type="button" class="pld">⬇️ HTML</button></div><iframe title="خطة الدرس"></iframe>';
+    document.body.appendChild(o); const f = o.querySelector('iframe'); f.srcdoc = h;
+    o.querySelector('.plx').onclick = () => o.remove();
+    o.querySelector('.plp').onclick = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('استخدم «تنزيل PDF بالعرض»'); } };
+    o.querySelector('.pld').onclick = () => saveFile(nm + '.html', h, 'text/html');
+    o.querySelector('.plpdf').onclick = async ev => { const bt = ev.currentTarget; bt.disabled = true; bt.textContent = '⏳ جارٍ إنشاء PDF…'; try { await planPdf(f, nm + '.pdf'); toast('✅ نُزّلت الخطة PDF بالعرض'); } catch (e) { toast('تعذّر إنشاء PDF – تأكد من الاتصال بالإنترنت'); } bt.disabled = false; bt.textContent = '📄 تنزيل PDF بالعرض'; };
+    return; }
   if (b.id === 'lesDl') { const {c, w} = lesCur(); if (!c) return; await saveFile(('درس_الأسبوع_' + w + '_' + c).replace(/[\/\s]+/g, '_') + '.html', lessonDeck(c, w), 'text/html'); return; }
   if (b.id === 'lesPr') { const f = $('#lesFrame'); try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('نزّل الدرس واطبعه من المتصفح'); } return; }
   if (b.dataset.ost) { const [id, k] = b.dataset.ost.split('|'), L = JSON.parse(JSON.stringify(OP())), x = L.find(y => y.id === id); if (!x) return; if (x.st === k) { delete x.st; delete x.d; delete x.by; } else { x.st = k; x.d = today(); x.by = me || ''; } const y = window.scrollY; await saveOp(L); toast(x.st ? OPST[k][1] + ' ' + OPST[k][0] : 'أُزيلت الحالة'); render(); window.scrollTo(0, y); return; }
