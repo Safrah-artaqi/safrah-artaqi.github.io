@@ -1671,7 +1671,7 @@ function sheetHTML(key, st, date) {
   const [b, n] = key.split(':'); let h = (SHEETS[b] || [])[+n - 1] || '';
   if (st) { let i = 0; const vals = [st.name, st.cls, date || '', teacherOfCls(st.cls).map(t => t.name).join('، ')]; h = h.replace(/<span class="l"><\/span>/g, m => i < 4 ? `<span class="l" style="font-weight:700">${esc(vals[i++])}</span>` : m); }
   const sl = st && (actOf(key) || {}).l ? slotOf(st, key) : null, tin = sl ? sl === 'ses' : actType(key) === 'in';
-  return `<div class="page act" style="position:relative">${h}<div style="position:absolute;top:6mm;left:8mm;font:800 11px Cairo,sans-serif;color:${tin ? '#0b5560' : '#9a5518'};border:1.5px solid currentColor;border-radius:999px;padding:1px 10px;background:#fff">${sl ? (tin ? 'نشاط صفي · الحصة' : 'نشاط لا صفي · الفسحة') : tin ? 'نشاط صفي' : 'نشاط لا صفي'}</div></div>`;
+  return `<div class="page act" style="position:relative">${h}<div dir="rtl" style="position:absolute;top:5mm;right:8mm;text-align:center;font:800 15px/1.25 Cairo,sans-serif;color:#0b6e3c;border:2px solid #0b6e3c;border-radius:10px;padding:3px 12px;background:#f1fbf5">برنامج «بالعربية أرتقي»<small style="display:block;font:700 9.5px/1.3 Cairo,sans-serif;color:#2f7d55">للطلاب الناطقين بغير اللغة العربية</small></div><div style="position:absolute;top:6mm;left:8mm;font:800 11px Cairo,sans-serif;color:${tin ? '#0b5560' : '#9a5518'};border:1.5px solid currentColor;border-radius:999px;padding:1px 10px;background:#fff">${sl ? (tin ? 'نشاط صفي · الحصة' : 'نشاط لا صفي · الفسحة') : tin ? 'نشاط صفي' : 'نشاط لا صفي'}</div></div>`;
 }
 function teacherPage(items, title) {
   const acts = items.map(x => ({key: x.key, a: actOf(x.key)})).filter(x => x.a);
