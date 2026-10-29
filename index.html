@@ -1097,7 +1097,7 @@ const planSrc = (s, w) => planOv(s.id)[w] ? 'stu' : catOv(catOf(s.total))[w] ? '
 function weekActs(s, w) { const P = weekPlan(s, w), li = lessonIdx(lessonOfW(w)), g = gradeOf(s);
   const mk = slot => c => ({w: +w, c, slot, key: li >= 0 ? g + ':' + (li * 5 + KEYS.indexOf(c) + 1) : null, gid: li >= 0 ? c + '-' + (li + 1) : null});
   const all = [...(P.ses || []).map(mk('ses')), ...(P.brk || []).map(mk('brk'))], out = [all.find(x => x.slot === 'ses'), all.find(x => x.slot === 'brk')].filter(Boolean);
-  for (const x of all) { if (out.length >= 2) break; if (!out.includes(x)) out.push(x); } return out; }
+  for (const x of all) { if (out.length >= 2) break; if (!out.includes(x) && !out.some(y => y.c === x.c)) out.push(x); } return out.map((x, i) => x.slot === (i ? 'brk' : 'ses') ? x : Object.assign({}, x, {slot: i ? 'brk' : 'ses'})); }
 const planActs = s => WEEKS().flatMap(w => weekActs(s, w));
 function planProg(s) { const P = planActs(s).filter(x => x.key), g = givenSet(s.id); return {tot: P.length, done: P.filter(x => g.has(x.key)).length}; }
 const slotOf = (s, key) => { const x = planActs(s).find(y => y.key === key); return x ? x.slot : null; };
@@ -1524,7 +1524,7 @@ const actCell = (s, a) => { const x = actOf(a.key || '') || {}, lv = LVLC[catOf(
 async function setGst(sid, g, st) { const L = S.logs[sid] || {e: []}, gt = Object.assign({}, L.gt || {}), cur = Object.assign({}, gt[g] || {}); if (cur.s === st) { delete cur.s; delete cur.a; } else { cur.s = st; cur.a = st === 'full' ? 1 : 0; } cur.d = today(); cur.t = me || ''; if (!cur.s && !cur.ac) delete gt[g]; else gt[g] = cur; await put('logs', sid, Object.assign({}, L, {gt})); }
 async function setGac(sid, g, v) { const L = S.logs[sid] || {e: []}, gt = Object.assign({}, L.gt || {}), cur = Object.assign({}, gt[g] || {}); if (v) cur.ac = v; else delete cur.ac; if (!cur.s && !cur.ac) delete gt[g]; else gt[g] = cur; await put('logs', sid, Object.assign({}, L, {gt})); }
 async function printOne(sid, key) { const st = S.students[sid]; if (!st) return; const fname = ('نشاط_' + actLabel(key) + '_' + st.name).replace(/[\/\s:]+/g, '_');
-  const h = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نشاط ${esc(actLabel(key))} – ${esc(st.name)}</title><style>${ACT_CSS}body{background:#fff;margin:0}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}</style><script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"><\/script></head><body>${sheetHTML(key, st, today())}</body></html>`;
+  const h = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نشاط ${esc(actLabel(key))} – ${esc(st.name)}</title><style>${ACT_CSS}body{background:#fff;margin:0}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}${FIT_CSS}</style><script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"><\/script></head><body>${sheetHTML(key, st, today())}${FIT_JS}</body></html>`;
   const rec = async () => { if (prSet(sid).has(key)) return; const cur = printedOf(sid).slice(); cur.push({key, date: today(), ts: Date.now(), tid: me || ''}); await put('pr', sid, {items: cur}); render(); };
   const o = document.createElement('div'); o.className = 'lesov plov'; o.innerHTML = `<div class="plbar"><button type="button" class="plx">✕ إغلاق</button><b>🖨️ نشاط ${esc(actLabel(key))} – ${esc(st.name)}</b><span></span><button type="button" class="plpdf">📄 ملف PDF للطباعة</button><button type="button" class="plp">🖨️ طباعة مباشرة</button><button type="button" class="pld">⬇️ HTML</button></div><iframe title="النشاط"></iframe>`;
   document.body.appendChild(o); const f = o.querySelector('iframe'); f.srcdoc = h; o.querySelector('.plx').onclick = () => o.remove();
@@ -1767,11 +1767,14 @@ function printItems() {
   }
   return UI.pMan.map(key => ({key, sids: []}));
 }
+
+const FIT_CSS = `.page.act{width:198mm;height:283mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block}.page.act>.fit{transform-origin:top center}@media print{.page.act{width:198mm;height:283mm;margin:0 auto;min-height:0;display:block}}`;
+const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;if(h>H)f.style.zoom=Math.max(.45,H/h);});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
 function sheetHTML(key, st, date) {
   const [b, n] = key.split(':'); let h = (SHEETS[b] || [])[+n - 1] || '';
   if (st) { let i = 0; const vals = [st.name, st.cls, date || '', teacherOfCls(st.cls).map(t => t.name).join('، ')]; h = h.replace(/<span class="l"><\/span>/g, m => i < 4 ? `<span class="l" style="font-weight:700">${esc(vals[i++])}</span>` : m); }
   const sl = st && (actOf(key) || {}).l ? slotOf(st, key) : null, tin = sl ? sl === 'ses' : actType(key) === 'in';
-  return `<div class="page act" style="position:relative">${h}<div dir="rtl" style="position:absolute;top:5mm;right:8mm;text-align:center;font:800 15px/1.25 Cairo,sans-serif;color:#0b6e3c;border:2px solid #0b6e3c;border-radius:10px;padding:3px 12px;background:#f1fbf5">برنامج «بالعربية أرتقي»<small style="display:block;font:700 9.5px/1.3 Cairo,sans-serif;color:#2f7d55">للطلاب الناطقين بغير اللغة العربية</small></div><div style="position:absolute;top:6mm;left:8mm;font:800 11px Cairo,sans-serif;color:${tin ? '#0b5560' : '#9a5518'};border:1.5px solid currentColor;border-radius:999px;padding:1px 10px;background:#fff">${sl ? (tin ? 'نشاط صفي · الحصة' : 'نشاط لا صفي · الفسحة') : tin ? 'نشاط صفي' : 'نشاط لا صفي'}</div></div>`;
+  return `<div class="page act" style="position:relative"><div class="fit">${h}</div><div dir="rtl" style="position:absolute;top:5mm;right:8mm;text-align:center;font:800 15px/1.25 Cairo,sans-serif;color:#0b6e3c;border:2px solid #0b6e3c;border-radius:10px;padding:3px 12px;background:#f1fbf5">برنامج «بالعربية أرتقي»<small style="display:block;font:700 9.5px/1.3 Cairo,sans-serif;color:#2f7d55">للطلاب الناطقين بغير اللغة العربية</small></div><div style="position:absolute;top:6mm;left:8mm;font:800 11px Cairo,sans-serif;color:${tin ? '#0b5560' : '#9a5518'};border:1.5px solid currentColor;border-radius:999px;padding:1px 10px;background:#fff">${sl ? (tin ? 'نشاط صفي · الحصة' : 'نشاط لا صفي · الفسحة') : tin ? 'نشاط صفي' : 'نشاط لا صفي'}</div></div>`;
 }
 function teacherPage(items, title) {
   const acts = items.map(x => ({key: x.key, a: actOf(x.key)})).filter(x => x.a);
@@ -1791,7 +1794,7 @@ function printDoc() {
   const title = UI.pMode === 'stu' ? 'الأسبوع ' + (UI.pW || curWeek()) + ' – ' + ((lessonOfW(UI.pW || curWeek()) || {}).t || '') : CATN[UI.pCat] + (UI.pMode === 'date' ? ' – ' + UI.pDate : '');
   if (UI.pKeys) pages.push(teacherPage(items, title));
   return {n: pages.filter(Boolean).length, html: `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>أنشطة ${esc(title)}</title><style>${ACT_CSS}
-  body{background:#fff}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}</style></head><body>${pages.join('')}</body></html>`};
+  body{background:#fff}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}${FIT_CSS}</style></head><body>${pages.join('')}${FIT_JS}</body></html>`};
 }
 function vPrint() {
   const c = +UI.pCat; const items = printItems();
