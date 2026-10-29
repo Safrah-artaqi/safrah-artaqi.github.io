@@ -830,7 +830,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
       <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
-  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span></div>
+  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:08</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
 <div class="dback" id="dback" hidden></div>
@@ -928,7 +928,7 @@ const COLLS = ['students', 'logs', 'glogs', 'att', 'cf', 'rn', 'pr'];
 const LK = 'arteqi-tracker-v1';
 let mode = 'boot', db = null, dl = null, ready = false, unlocked = false, tab = 'home';
 let me = ''; try { me = localStorage.getItem(LK + '-me') || ''; } catch (e) {}
-const UI = {sTab: 'look', room: '', sid: '', cat: '1', fCat: '', fCls: '', mine: false, att: 'ses', attDate: today(), attCat: '', attCls: '', cfT: '', cfCls: '', cfDate: today(), cfPer: '1', lk: 'plan', pMode: 'stu', pP: 0, pEx: new Set(), pStu: [], pPick: new Map(), pAct: new Set(), pOnlyNeed: false, pNoGiven: true, pMax: '0', pDate: today(), pCat: '1', pBook: '1', pPer: 'stu', pCopies: 1, pKeys: true, pSel: null, pMan: [], rep: 'stu', rSid: '', rCat: '1', rCls: '', editSid: ''};
+const UI = {sTab: 'look', room: '', sid: '', cat: '1', fCat: '', fCls: '', mine: false, att: 'ses', attDate: today(), attCat: '', attCls: '', cfT: '', cfCls: '', cfDate: today(), cfPer: '1', lk: 'plan', pMode: 'stu', pP: 0, pEx: new Set(), pStu: [], pPick: new Map(), pAct: new Set(), pOnlyNeed: false, pNoGiven: true, pMax: '0', pDate: today(), pCat: '1', pBook: '1', pPer: 'stu', pCopies: 1, pKeys: false, pSel: null, pMan: [], rep: 'stu', rSid: '', rCat: '1', rCls: '', editSid: ''};
 
 function seedStudents() {
   D.students.forEach((s, i) => { const id = 's' + (i + 1); S.students[id] = Object.assign({id}, s); });
