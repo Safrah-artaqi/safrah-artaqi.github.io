@@ -830,7 +830,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
       <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
-  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:18</span></div>
+  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:24</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
 <div class="dback" id="dback" hidden></div>
@@ -1772,8 +1772,8 @@ function printItems() {
   return UI.pMan.map(key => ({key, sids: []}));
 }
 
-const FIT_CSS = `@page{size:A4 portrait;margin:0}.page.act{width:200mm;height:287mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid;padding:8px 12px 10px!important}@media print{html,body{margin:0!important;padding:0!important;background:#fff;height:auto!important}.page.act{width:200mm;height:287mm;margin:5mm auto 0!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
-const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;f.style.zoom=Math.max(.45,Math.min(.92,H/h));});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
+const FIT_CSS = `@page{size:A4 portrait;margin:0}.page.act{width:200mm;height:287mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid;padding:6px 10px 6px!important;border-width:2px!important;border-radius:14px!important}.page.act .hdr{height:44px;margin:0 0 3px}.page.act .title{padding:5px;border-radius:12px}.page.act .title h1{font-size:19px}.page.act .title small{font-size:12.5px}.page.act .score{width:72px;border-width:2px}.page.act .score b{font-size:18px}.page.act .banner{font-size:16px;margin:5px 0 2px}.page.act .foot{font-size:10.5px;margin-top:4px;font-weight:700;gap:4px}.page.act .foot .l{min-width:60px}@media print{html,body{margin:0!important;padding:0!important;background:#fff;height:auto!important}.page.act{width:200mm;height:287mm;margin:5mm auto 0!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
+const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;if(h>H)f.style.zoom=Math.max(.6,H/h);});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
 
 function printHtml(html, fallbackFrame) { let w = null; try { w = window.open('', '_blank'); } catch (e) {}
   if (!w) { try { const f = fallbackFrame; f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('اسمح بفتح النوافذ المنبثقة للطباعة، أو استخدم «ملف PDF»'); } return; }
