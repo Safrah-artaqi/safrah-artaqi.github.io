@@ -830,7 +830,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
       <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
-  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:46</span></div>
+  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:53</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
 <div class="dback" id="dback" hidden></div>
@@ -1772,7 +1772,7 @@ function printItems() {
   return UI.pMan.map(key => ({key, sids: []}));
 }
 
-const FIT_CSS = `@page{size:A4 portrait;margin:0}.page.act{width:190mm;height:277mm;max-width:none;min-height:0;box-sizing:border-box;margin:10px auto;display:flex!important;flex-direction:column;overflow:hidden;break-inside:avoid;page-break-inside:avoid}.page.act>.fit{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}.page.act>.fit>.foot{margin-top:6px}@media print{html,body{margin:0!important;padding:0!important;background:#fff}.page.act{width:190mm;height:277mm!important;min-height:0!important;margin:10mm auto 0!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
+const FIT_CSS = `@page{size:A4 portrait;margin:0}.page.act{width:186mm;height:258mm;max-width:none;min-height:0;box-sizing:border-box;margin:10px auto;display:flex!important;flex-direction:column;overflow:hidden;break-inside:avoid;page-break-inside:avoid}.page.act>.fit{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}.page.act>.fit>.foot{margin-top:6px}@media print{html,body{margin:0!important;padding:0!important;background:#fff}.page.act{width:186mm;height:258mm!important;min-height:0!important;margin:8mm auto 0!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
 const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;f.style.minHeight='';var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-6;f.style.flex='none';var h=f.scrollHeight;f.style.flex='';if(h>H){var z=Math.max(.55,H/h);f.style.zoom=z;f.style.minHeight=(H/z)+'px';}});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
 
 function printHtml(html, fallbackFrame) { let w = null; try { w = window.open('', '_blank'); } catch (e) {}
