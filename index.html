@@ -1003,7 +1003,7 @@ function applyRemote(d) {
 async function ghPull(silent) {
   if (!ghReady() || ghBusy) return false; ghBusy = true;
   try { const {data, sha} = await ghGet(); if (sha && sha === ghSha) { ghBusy = false; return false; }
-    ghSha = sha; const ch = data ? applyRemote(data) : false; ghStatus(data ? '🔗 متزامن مع GitHub ' + hhmm() : '🔗 GitHub جاهز (لا يوجد ملف بيانات بعد)'); ghBusy = false; return ch;
+    ghSha = sha; const ch = data ? applyRemote(data) : false; if (data) setTimeout(migStart, 0); ghStatus(data ? '🔗 متزامن مع GitHub ' + hhmm() : '🔗 GitHub جاهز (لا يوجد ملف بيانات بعد)'); ghBusy = false; return ch;
   } catch (e) { ghBusy = false; if (!silent) ghStatus('تعذّر الاتصال بـ GitHub: ' + (e.message || ''), true); return false; }
 }
 function ghMark(k) { if (mode !== 'local' || !ghReady()) return; ghDirty.add(k); ghSaveDirty(); clearTimeout(ghTimer); ghTimer = setTimeout(ghPush, 2500); }
@@ -1276,7 +1276,7 @@ function filterBar(withStudent) {
 /* ---------- render shell ---------- */
 const MENU = [['home', '🏠 الصفحة الرئيسية'], ['guide', '📘 دليل الاستخدام'], ['set', '⚙️ الإعدادات']];
 const TABS = [['les', '📽️ دروس البرنامج'], ['op', '📋 الخطة التشغيلية'], ['tl', '📆 الخطة الزمنية'], ['ses', '▶ سير الحصة'], ['sched', '📅 جدول حصص الدعم'], ['post', '📝 الاختبار البعدي'], ['home', '🏠 الرئيسية'], ['classes', '🏫 الصفوف'], ['guide', '📘 دليل الاستخدام'], ['dash', '📊 لوحة المتابعة'], ['ind', '📋 الخطط الفردية'], ['grp', '👥 خطط الفئات'], ['cls', '🏫 المتابعة الصفية'], ['att', '🗓️ الحضور'], ['print', '🖨️ طباعة الأنشطة'], ['rep', '📄 التقارير'], ['studs', '🧑‍🎓 الطلاب'], ['set', '⚙️ الإعدادات']];
-function migStart() { if (!ready || migStart.done || !S.cfg) return; migStart.done = 1; if (!S.cfg.mig1) { S.cfg.mig1 = 1; if (!S.cfg.start || S.cfg.start === '2026-10-19') S.cfg.start = '2026-10-01'; saveCfg(); } }
+function migStart() { if (!ready || migStart.done || !S.cfg || (mode === 'local' && ghReady() && !ghSha) || mode === 'boot') return; migStart.done = 1; if (!S.cfg.mig1) { S.cfg.mig1 = 1; if (!S.cfg.start || S.cfg.start === '2026-10-19') S.cfg.start = '2026-10-01'; saveCfg(); } }
 function render() {
   migStart();
   const v = $('#view'); applyLook();
@@ -1523,12 +1523,24 @@ const SLOTN2 = {ses: '🏫 حصة البرنامج', brk: '🌤️ الفسحة'
 const actCell = (s, a) => { const x = actOf(a.key || '') || {}, lv = LVLC[catOf(s.total)] || ['', '']; return `${ICON[a.c]} <b>${COMP[a.c]}</b>${x.n ? ` · نشاط ${x.n}: ${esc(x.t || '')}` : ''} <small class="lvt">${lv[0]} ${lv[1]}</small>`; };
 async function setGst(sid, g, st) { const L = S.logs[sid] || {e: []}, gt = Object.assign({}, L.gt || {}), cur = Object.assign({}, gt[g] || {}); if (cur.s === st) { delete cur.s; delete cur.a; } else { cur.s = st; cur.a = st === 'full' ? 1 : 0; } cur.d = today(); cur.t = me || ''; if (!cur.s && !cur.ac) delete gt[g]; else gt[g] = cur; await put('logs', sid, Object.assign({}, L, {gt})); }
 async function setGac(sid, g, v) { const L = S.logs[sid] || {e: []}, gt = Object.assign({}, L.gt || {}), cur = Object.assign({}, gt[g] || {}); if (v) cur.ac = v; else delete cur.ac; if (!cur.s && !cur.ac) delete gt[g]; else gt[g] = cur; await put('logs', sid, Object.assign({}, L, {gt})); }
-async function printOne(sid, key) { const st = S.students[sid]; if (!st) return; const h = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نشاط ${esc(actLabel(key))} – ${esc(st.name)}</title><style>${ACT_CSS}body{background:#fff}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}</style></head><body>${sheetHTML(key, st, today())}</body></html>`;
+async function printOne(sid, key) { const st = S.students[sid]; if (!st) return; const fname = ('نشاط_' + actLabel(key) + '_' + st.name).replace(/[\/\s:]+/g, '_');
+  const h = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نشاط ${esc(actLabel(key))} – ${esc(st.name)}</title><style>${ACT_CSS}body{background:#fff;margin:0}.page{margin:10px auto}@media screen{body{background:#eef2f5;padding:6px}}</style><script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"><\/script></head><body>${sheetHTML(key, st, today())}</body></html>`;
   const rec = async () => { if (prSet(sid).has(key)) return; const cur = printedOf(sid).slice(); cur.push({key, date: today(), ts: Date.now(), tid: me || ''}); await put('pr', sid, {items: cur}); render(); };
-  const o = document.createElement('div'); o.className = 'lesov plov'; o.innerHTML = `<div class="plbar"><button type="button" class="plx">✕ إغلاق</button><b>🖨️ نشاط ${esc(actLabel(key))} – ${esc(st.name)}</b><span></span><button type="button" class="plp">🖨️ طباعة</button><button type="button" class="pld">⬇️ تنزيل</button></div><iframe title="النشاط"></iframe>`;
+  const o = document.createElement('div'); o.className = 'lesov plov'; o.innerHTML = `<div class="plbar"><button type="button" class="plx">✕ إغلاق</button><b>🖨️ نشاط ${esc(actLabel(key))} – ${esc(st.name)}</b><span></span><button type="button" class="plpdf">📄 ملف PDF للطباعة</button><button type="button" class="plp">🖨️ طباعة مباشرة</button><button type="button" class="pld">⬇️ HTML</button></div><iframe title="النشاط"></iframe>`;
   document.body.appendChild(o); const f = o.querySelector('iframe'); f.srcdoc = h; o.querySelector('.plx').onclick = () => o.remove();
   o.querySelector('.plp').onclick = async () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} await rec(); toast('🖨️ سُجّلت الطباعة في خطة الطالب'); };
-  o.querySelector('.pld').onclick = async () => { await rec(); await saveFile(('نشاط_' + actLabel(key) + '_' + st.name).replace(/[\/\s:]+/g, '_') + '.html', h, 'text/html'); }; }
+  o.querySelector('.pld').onclick = async () => { await rec(); await saveFile(fname + '.html', h, 'text/html'); };
+  o.querySelector('.plpdf').onclick = async ev => { const bt = ev.currentTarget; bt.disabled = true; bt.textContent = '⏳ جارٍ إنشاء PDF…';
+    try { const W = f.contentWindow; for (let t = 0; t < 40 && !W.htmlToImage; t++) await new Promise(r => setTimeout(r, 150)); if (!W.htmlToImage || !window.PDFLib) throw new Error('lib');
+      try { await W.document.fonts.ready; } catch (e) {} const node = W.document.querySelector('.page'); node.style.margin = '0';
+      const url = await W.htmlToImage.toJpeg(node, {quality: .93, pixelRatio: 2, backgroundColor: '#ffffff'}); node.style.margin = '';
+      const img = await loadImg(url), pdf = await PDFLib.PDFDocument.create(), PW = 595.28, PH = 841.89, sc = Math.min(PW / img.width, PH / img.height);
+      const jpg = await pdf.embedJpg(await (await fetch(url)).arrayBuffer()), pg = pdf.addPage([PW, PH]), w = img.width * sc, hh = img.height * sc; pg.drawImage(jpg, {x: (PW - w) / 2, y: PH - hh, width: w, height: hh}); pdf.setTitle(fname.replace(/_/g, ' '));
+      const blob = new Blob([await pdf.save()], {type: 'application/pdf'}); await rec();
+      if (dl || window.claude) await saveFile(fname + '.pdf', blob, 'application/pdf'); else { const u = URL.createObjectURL(blob), win = window.open(u, '_blank'); if (!win) await saveFile(fname + '.pdf', blob, 'application/pdf'); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+      toast('📄 ملف PDF جاهز للطباعة – وسُجّلت الطباعة في خطة الطالب');
+    } catch (e) { toast('تعذّر إنشاء PDF (تحتاج اتصالًا بالإنترنت) – استخدم «طباعة مباشرة»'); }
+    bt.disabled = false; bt.textContent = '📄 ملف PDF للطباعة'; }; }
 const wkDays = w => { const d0 = addDays(W0(), (w - 3) * 7); return [0, 1, 2, 3, 4].map(i => addDays(d0, i)); };
 function wkAtt(s, w) { const days = wkDays(w), o = {}; ['ses', 'brk'].forEach(t => { o[t] = days.map(d => ({d, m: ((S.att[t + '_' + d] || {}).marks || {})[s.id] || ''})).filter(x => x.m); }); return o; }
 
