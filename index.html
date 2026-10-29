@@ -1772,7 +1772,7 @@ function printItems() {
   return UI.pMan.map(key => ({key, sids: []}));
 }
 
-const FIT_CSS = `@page{size:A4 portrait;margin:8mm}.page.act{width:186mm;height:266mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid}@media print{html,body{margin:0;padding:0;background:#fff}.page.act{width:186mm;height:266mm;margin:0 auto;break-after:page;page-break-after:always}.page.act:last-of-type{break-after:auto;page-break-after:auto}}`;
+const FIT_CSS = `@page{size:A4 portrait;margin:10mm}.page.act{width:178mm;height:250mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid}@media print{html,body{margin:0!important;padding:0!important;background:#fff;height:auto!important}.page.act{width:178mm;height:250mm;margin:0 auto!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
 const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;if(h>H)f.style.zoom=Math.max(.45,H/h);});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
 function sheetHTML(key, st, date) {
   const [b, n] = key.split(':'); let h = (SHEETS[b] || [])[+n - 1] || '';
