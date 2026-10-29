@@ -810,6 +810,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
 .lvt{display:inline-block;background:#eef7f6;border:1px solid #bfe3e0;border-radius:8px;padding:0 6px;font-size:11px;margin-inline-start:4px}
 .iwt td{vertical-align:middle}.iwh tr.cur td{background:#fff8e6}.iwh tr.fut td{opacity:.55}
 .hpa{display:inline-block;border-radius:9px;padding:1px 8px;background:#f4f6f8;font-size:12.5px;white-space:nowrap}.hpa.full{background:#e7f7ee;color:#1f7a4f}.hpa.part{background:#fff3df;color:#8a5a00}.hpa.none{background:#ffecec;color:#b33}
+.iwt tr.slh td{background:#eef7f6;font-weight:800;color:#0b6e75;text-align:right;padding:4px 10px}
 
 </style>
 <div class="page" dir="rtl" lang="ar">
@@ -1578,8 +1579,10 @@ function vInd() {
   const c = catOf(s.total), ws = WEEKS(), cw = curWeek(), w = ws.includes(UI.iw) ? UI.iw : cw, L = lessonOfW(w) || {}, A = weekActs(s, w).filter(x => x.key), gd = goalsDone(s.id);
   const all = ws.filter(x => x <= cw).flatMap(x => weekActs(s, x).filter(y => y.key)), n = {full: 0, part: 0, none: 0, wait: 0}; all.forEach(y => { const e = gd[y.gid]; n[e === 'full' || e === 'part' || e === 'none' ? e : 'wait']++; });
   const pct = all.length ? (n.full + n.part * 0.5) / all.length * 100 : null, at = wkAtt(s, w);
-  const rows = A.map((x, i) => `<tr><td><b>${i + 1}</b><br><small>${SLOTN2[x.slot]}</small></td><td class="l">${actCell(s, x)}</td><td class="l">🎯 ${esc((goalOf(x.gid) || {}).t || '')}</td><td>${g3Btns(s, x)}</td><td>${gacSel(s, x)}</td><td>${prCell(s, x)}</td></tr>`).join('');
-  const hist = ws.map(x => { const B = weekActs(s, x).filter(y => y.key), Lx = lessonOfW(x) || {}; return `<tr class="${x === w ? 'cur' : x > cw ? 'fut' : ''}"><td><button class="lnk" data-iw="${x}" type="button"><b>${x}</b></button><br><small>${fmtDM(weekDate(x))}</small></td><td class="l">${esc(Lx.t || '')}</td>${[0, 1].map(k => { const y = B[k]; if (!y) return '<td>—</td>'; const e = gd[y.gid], ic = {full: '✅', part: '🟠', none: '❌'}[e] || (x <= cw ? '⏳' : ''); return `<td><span class="hpa ${e || ''}">${ICON[y.c]} ${SH[y.c]} <small>ن${y.key.split(':')[1]}</small> ${ic}</span></td>`; }).join('')}</tr>`; }).join('');
+  const rows = A.map((x, i) => `<tr class="slh"><td colspan="6">${x.slot === 'ses' ? '🏫 نشاط الحصة' : '🌤️ نشاط الفسحة'}</td></tr><tr><td><b>${i + 1}</b><br><small>${SLOTN2[x.slot]}</small></td><td class="l">${actCell(s, x)}</td><td class="l">🎯 ${esc((goalOf(x.gid) || {}).t || '')}</td><td>${g3Btns(s, x)}</td><td>${gacSel(s, x)}</td><td>${prCell(s, x)}</td></tr>`).join('');
+  const slotTbl = sl => ws.map(x => { const y = weekActs(s, x).find(z => z.slot === sl && z.key), Lx = lessonOfW(x) || {}; if (!y) return ''; const e = gd[y.gid], ic = {full: '✅ كليًّا', part: '🟠 جزئيًّا', none: '❌ لم يتحقّق'}[e] || (x <= cw ? '⏳ لم يُقيَّم' : ''), ax = actOf(y.key) || {}, d0 = weekDate(x);
+    return `<tr class="${x === w ? 'cur' : x > cw ? 'fut' : ''}"><td><button class="lnk" data-iw="${x}" type="button"><b>${x}</b></button></td><td><small>${fmtDM(d0)} – ${fmtDM(addDays(W0(), (x - 3) * 7 + 4))}</small></td><td class="l">${esc(Lx.t || '')} <small>(ص ${esc(Lx.pg || '—')})</small></td><td class="l">${ICON[y.c]} ${COMP[y.c]} · نشاط ${ax.n || ''}: ${esc(ax.t || '')}</td><td class="l mini2">${esc((goalOf(y.gid) || {}).t || '')}</td><td><span class="hpa ${e || ''}">${ic}</span></td><td>${prSet(s.id).has(y.key) ? '🖨️✓' : ''}</td></tr>`; }).join('');
+  const hist = sl => `<div class="tw"><table class="iwh"><thead><tr><th>الأسبوع</th><th>التاريخ</th><th class="nm">الدرس (الخطة الزمنية)</th><th class="nm">النشاط</th><th class="nm">الهدف</th><th>التحقّق</th><th>طُبع</th></tr></thead><tbody>${slotTbl(sl)}</tbody></table></div>`;
   return bar + `<div class="pf"><div class="pcard"><h2>${esc(s.name)}</h2><div class="sub">${esc(clsName(s.cls))} · ${catChip(c)} ${CATN[c]} · مستوى الأنشطة: <b>${(LVLC[c] || [''])[0]} ${(LVLC[c] || ['', ''])[1]}</b> (${esc(GRADEN[gradeOf(s)] || '')}) · النسبة القبلية ${fmt(s.total)}%</div>
   <div class="sub">المهارات غير المتقنة: <b>${weak(s).map(k => COMP[k]).join('، ') || '— (إثراء)'}</b> · المعلم: <b>${esc(teacherOfCls(s.cls).map(t => t.name).join('، ') || '—')}</b></div></div>
   <div class="ring">${ring(pct, 86)}<div class="rt"><span>✅ تحقّق كليًّا: <b>${n.full}</b> · 🟠 جزئيًّا: <b>${n.part}</b></span><span>❌ لم يتحقّق: <b>${n.none}</b> · ⏳ لم يُقيَّم: <b>${n.wait}</b></span><span>حضور الحصة: <b>${attPct(attStats(s.id, 'ses').pct)}</b> · الفسحة: <b>${attPct(attStats(s.id, 'brk').pct)}</b></span></div></div></div>
@@ -1589,7 +1592,8 @@ function vInd() {
   <div class="tools" style="margin:0 0 8px"><button class="btn w sm" data-les="${esc(s.cls)}|${w}" type="button">📽️ درس الأسبوع (الأنشطة والتقويم)</button><span class="mini2">الحضور هذا الأسبوع: حصة ${at.ses.map(x => ATT[x.m][2]).join(' ') || '—'} · فسحة ${at.brk.map(x => ATT[x.m][2]).join(' ') || '—'}</span></div>
   <div class="tw"><table class="iwt"><thead><tr><th>#</th><th class="nm">النشاط</th><th class="nm">الهدف المرتبط</th><th>مدى تحقّق الهدف</th><th>إجراء المعلم</th><th>الطباعة</th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="empty">لا يوجد درس في هذا الأسبوع.</td></tr>'}</tbody></table></div>
   <p class="hint">عند طباعة النشاط يُعدّ هدفه متحقّقًا كليًّا تلقائيًّا حتى يغيّره المعلم. اضغط الحالة نفسها مرة ثانية لإلغائها. التقييم يظهر أيضًا في استمارة الحضور وفي الدرس.</p></div></section>
-  <h2 class="sec">📈 متابعة التقدّم أسبوعيًّا</h2><div class="tw"><table class="iwh"><thead><tr><th>الأسبوع</th><th class="nm">الدرس</th><th>النشاط ١ (الحصة)</th><th>النشاط ٢ (الفسحة)</th></tr></thead><tbody>${hist}</tbody></table></div>`;
+  <h2 class="sec">🏫 أنشطة الحصص – مرتّبة بحسب الخطة الزمنية</h2>${hist('ses')}
+  <h2 class="sec">🌤️ أنشطة الفسحة – مرتّبة بحسب الخطة الزمنية</h2>${hist('brk')}`;
 }
 
 /* ---------- group (category) plans ---------- */
