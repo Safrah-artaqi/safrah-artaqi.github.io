@@ -830,7 +830,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
       <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
-  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:08</span></div>
+  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:18</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
 <div class="dback" id="dback" hidden></div>
@@ -1529,7 +1529,7 @@ async function printOne(sid, key) { const st = S.students[sid]; if (!st) return;
   const rec = async () => { if (prSet(sid).has(key)) return; const cur = printedOf(sid).slice(); cur.push({key, date: today(), ts: Date.now(), tid: me || ''}); await put('pr', sid, {items: cur}); render(); };
   const o = document.createElement('div'); o.className = 'lesov plov'; o.innerHTML = `<div class="plbar"><button type="button" class="plx">✕ إغلاق</button><b>🖨️ نشاط ${esc(actLabel(key))} – ${esc(st.name)}</b><span></span><button type="button" class="plpdf">📄 ملف PDF للطباعة</button><button type="button" class="plp">🖨️ طباعة مباشرة</button><button type="button" class="pld">⬇️ HTML</button></div><iframe title="النشاط"></iframe>`;
   document.body.appendChild(o); const f = o.querySelector('iframe'); f.srcdoc = h; o.querySelector('.plx').onclick = () => o.remove();
-  o.querySelector('.plp').onclick = async () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} await rec(); toast('🖨️ سُجّلت الطباعة في خطة الطالب'); };
+  o.querySelector('.plp').onclick = async () => { printHtml(h, f); await rec(); toast('🖨️ سُجّلت الطباعة في خطة الطالب'); };
   o.querySelector('.pld').onclick = async () => { await rec(); await saveFile(fname + '.html', h, 'text/html'); };
   o.querySelector('.plpdf').onclick = async ev => { const bt = ev.currentTarget; bt.disabled = true; bt.textContent = '⏳ جارٍ إنشاء PDF…';
     try { const W = f.contentWindow; for (let t = 0; t < 40 && !W.htmlToImage; t++) await new Promise(r => setTimeout(r, 150)); if (!W.htmlToImage || !window.PDFLib) throw new Error('lib');
@@ -1772,8 +1772,12 @@ function printItems() {
   return UI.pMan.map(key => ({key, sids: []}));
 }
 
-const FIT_CSS = `@page{size:A4 portrait;margin:12mm}.page.act{width:168mm;height:236mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid}@media print{html,body{margin:0!important;padding:0!important;background:#fff;height:auto!important}.page.act{width:168mm;height:236mm;margin:0 auto!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
-const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;if(h>H)f.style.zoom=Math.max(.45,H/h);});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
+const FIT_CSS = `@page{size:A4 portrait;margin:0}.page.act{width:200mm;height:287mm;max-width:none;min-height:0;box-sizing:border-box;overflow:hidden;margin:10px auto;display:block;break-inside:avoid;page-break-inside:avoid;padding:8px 12px 10px!important}@media print{html,body{margin:0!important;padding:0!important;background:#fff;height:auto!important}.page.act{width:200mm;height:287mm;margin:5mm auto 0!important;break-after:auto!important;page-break-after:auto!important}.page.act~.page{break-before:page;page-break-before:always}}`;
+const FIT_JS = `<script>(function(){function fit(){document.querySelectorAll('.page.act').forEach(function(p){var f=p.querySelector('.fit');if(!f)return;f.style.zoom=1;var cs=getComputedStyle(p),H=p.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-10,h=f.scrollHeight;f.style.zoom=Math.max(.45,Math.min(.92,H/h));});}window.addEventListener('load',fit);window.addEventListener('beforeprint',fit);try{matchMedia('print').addListener(fit)}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);setTimeout(fit,250);fit();})();<\/script>`;
+
+function printHtml(html, fallbackFrame) { let w = null; try { w = window.open('', '_blank'); } catch (e) {}
+  if (!w) { try { const f = fallbackFrame; f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('اسمح بفتح النوافذ المنبثقة للطباعة، أو استخدم «ملف PDF»'); } return; }
+  w.document.open(); w.document.write(html.replace(/<script src="[^"]*"><\/script>/g, '').replace('</body>', '<script>window.addEventListener("load",function(){setTimeout(function(){window.focus();window.print();},700)});<\/script></body>')); w.document.close(); }
 function sheetHTML(key, st, date) {
   const [b, n] = key.split(':'); let h = (SHEETS[b] || [])[+n - 1] || '';
   if (st) { let i = 0; const vals = [st.name, st.cls, date || '', teacherOfCls(st.cls).map(t => t.name).join('، ')]; h = h.replace(/<span class="l"><\/span>/g, m => i < 4 ? `<span class="l" style="font-weight:700">${esc(vals[i++])}</span>` : m); }
@@ -2830,7 +2834,7 @@ document.addEventListener('click', async ev => {
     case 'pPickClr': UI.pAct = new Set(); render(); break;
     case 'pExClr': UI.pEx = new Set(); render(); break;
     case 'pManOk': UI.pMan = mselVal('pMan'); render(); break;
-    case 'pPrint': { const f = $('#pFrame'); try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('الطباعة غير متاحة هنا – نزّل الملف واطبعه'); } const nrec = await recordPrints(); if (nrec) { toast('🖨️ سُجّلت الأنشطة المطبوعة في خطط الطلاب وتحقّقت أهدافها'); setTimeout(() => { if (tab === 'print') { const y = window.scrollY; render(); window.scrollTo(0, y); } }, 1200); } break; }
+    case 'pPrint': { const f = $('#pFrame'); printHtml(printDoc().html, f); const nrec = await recordPrints(); if (nrec) { toast('🖨️ سُجّلت الأنشطة المطبوعة في خطط الطلاب وتحقّقت أهدافها'); setTimeout(() => { if (tab === 'print') { const y = window.scrollY; render(); window.scrollTo(0, y); } }, 1200); } break; }
     case 'pDl': { const d = printDoc(); const nrec = await recordPrints(); if (nrec) toast('🖨️ سُجّلت الأنشطة المطبوعة في خطط الطلاب وتحقّقت أهدافها'); render(); await saveFile(('أنشطة_' + CATN[UI.pCat].split('–')[0].trim() + (UI.pMode === 'date' ? '_' + UI.pDate : '')).replace(/\s+/g, '_') + '.html', d.html, 'text/html'); break; }
     case 'sCancel': UI.editSid = ''; render(); break;
     case 'seedBtn': { for (const [i, s] of D.students.entries()) await put('students', 's' + (i + 1), Object.assign({id: 's' + (i + 1)}, s)); render(); break; }
