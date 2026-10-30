@@ -830,7 +830,7 @@ small.auto{display:block;margin-top:2px}.gac{max-width:230px;font:inherit;font-s
       <div class="npanel" id="bellP" hidden></div></div>
   </div>
   <main id="view"></main>
-  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/29 – 11:53</span></div>
+  <div class="foot"><span>إعداد وتصميم: أ. خالد الحمري</span><span>منسق البرنامج: أ. عمار حسين سند</span><span>مدير المدرسة: أ. حمود أحمد علي</span><span class="ver">الإصدار: 2026/10/30 – 11:26</span></div>
   <div class="copy">جميع الحقوق محفوظة © مدرسة سافرة الابتدائية الإعدادية للبنين</div>
 </div>
 <div class="dback" id="dback" hidden></div>
@@ -874,14 +874,13 @@ const clsName = c => { const [g, n] = String(c).split('/'); return (GR[g] || g) 
 const halqaOf = c => /ع/.test(c) ? 'الثالثة' : 'الثانية';
 
 // weekly support sessions — from the official timetable (first term 2026–2027): day 0=Sunday … 4=Thursday, per = period 1–7
-const DEF_SCHED = [{id: 'h1', tid: 't1', day: 0, per: 3, cls: '2ع/2'}, {id: 'h2', tid: 't3', day: 0, per: 6, cls: '4ب/2'}, {id: 'h3', tid: 't2', day: 0, per: 7, cls: '3ع/1'},
-  {id: 'h4', tid: 't2', day: 1, per: 2, cls: '3ع/2'}, {id: 'h5', tid: 't3', day: 1, per: 4, cls: '4ب/1'}, {id: 'h6', tid: 't3', day: 2, per: 6, cls: '5ب/1'},
+const DEF_SCHED = [{id: 'h1', tid: 't3', day: 0, per: 3, cls: '2ع/2'}, {id: 'h2', tid: 't2', day: 0, per: 6, cls: '4ب/2'}, {id: 'h3', tid: 't3', day: 0, per: 7, cls: '3ع/1'},
+  {id: 'h4', tid: 't2', day: 1, per: 2, cls: '3ع/2'}, {id: 'h5', tid: 't3', day: 1, per: 4, cls: '4ب/1'}, {id: 'h6', tid: 't1', day: 2, per: 6, cls: '5ب/1'},
   {id: 'h7', tid: 't3', day: 3, per: 5, cls: '1ع/2'}, {id: 'h8', tid: 't3', day: 4, per: 5, cls: '1ع/1'}, {id: 'h9', tid: 't2', day: 4, per: 5, cls: '6ب/1'}, {id: 'h10', tid: 't1', day: 4, per: 7, cls: '2ع/1'}];
 const DEF_TEACHERS = [
-  {id: 't1', name: 'أ. عمار سند', cls: ['2ع/1', '2ع/2']},
-  {id: 't2', name: 'أ. خالد الحمري', cls: ['6ب/1', '3ع/1', '3ع/2']},
-  {id: 't3', name: 'أ. نادر النوبي', cls: ['1ع/1', '1ع/2']},
-  {id: 't4', name: 'أ. عبدالكريم فرحان', cls: ['4ب/1', '4ب/2', '5ب/1']},
+  {id: 't1', name: 'أ. عمار سند', cls: ['2ع/1', '5ب/1']},
+  {id: 't2', name: 'أ. خالد الحمري', cls: ['3ع/2', '6ب/1', '4ب/2']},
+  {id: 't3', name: 'أ. نادر النوبي', cls: ['1ع/1', '1ع/2', '4ب/1', '3ع/1', '2ع/2']},
 ];
 const G0 = {
   L: [['تمييز الأصوات المتقاربة في الكلمات المسموعة', 1], ['فهم التعليمات الشفهية القصيرة وتنفيذها', 1], ['التقاط الكلمات المفتاحية من نص مسموع', 2], ['الإجابة عن أسئلة الفهم الحرفي لنص مسموع', 2], ['ترتيب أحداث نص مسموع', 2], ['الحكم على صحة العبارات من نص مسموع', 2], ['استنتاج الفكرة الرئيسة والعبرة من المسموع', 3], ['تمييز آراء المتحدثين ومسوّغاتهم', 3]],
